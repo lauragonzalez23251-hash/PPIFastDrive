@@ -35,7 +35,7 @@ export default class UsuarioSeeder implements Seeder {
                 documento_identidad_user: '1035414668',
                 nombre_user:              'Laura',
                 primer_apellido:          'González',
-                //segundo_apellido:         'Muñoz',
+                segundo_apellido:         'Muñoz',
                 celular:                  '3000000001',
                 fecha_nacimiento_user:    new Date('1990-01-01'),
                 correo_personal_user:     'lalagon0607@gmail.com',
@@ -53,7 +53,7 @@ export default class UsuarioSeeder implements Seeder {
             });
             if (!existe) {
                 await repo.save(repo.create(u));
-                console.log(` Usuario: ${u.nombre_user} ${u.primer_apellido} — ${u.correo_personal_user}`);
+                console.log(` Usuario: ${u.nombre_user} ${u.primer_apellido} ${u.segundo_apellido} — ${u.correo_personal_user}`);
             } else {
                 console.log(`  Ya existe: ${u.correo_personal_user}`);
             }

@@ -45,6 +45,7 @@ export default function LoginPage() {
         localStorage.setItem('userRol', data.idRol);
         localStorage.setItem('userNombreRol', data.nombreRol);
         localStorage.setItem('userName', data.nombre);
+        localStorage.setItem('esPrincipal', data.userId === 1 ? 'true' : 'false');
 
         // Redirección inteligente basada en los roles de Oracle
         // Conductor = 2, Pasajero = 3, Mixto = 4

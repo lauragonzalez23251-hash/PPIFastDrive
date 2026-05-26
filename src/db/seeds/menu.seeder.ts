@@ -26,10 +26,19 @@ export default class MenuSeeder implements Seeder {
 
         // Menús hijo (con menuPadre)
         const menusHijo = [
-            { codigo_menu: 'M011', url_menu: '/dashboard/conductor', nombre_menu: 'Panel Conductor', padre: 'M001' },
-            { codigo_menu: 'M012', url_menu: '/dashboard/pasajero',  nombre_menu: 'Panel Pasajero',  padre: 'M001' },
-            { codigo_menu: 'M021', url_menu: '/conductores',         nombre_menu: 'Conductores',     padre: 'M002' },
-            { codigo_menu: 'M022', url_menu: '/pasajeros',           nombre_menu: 'Pasajeros',       padre: 'M002' },
+            { codigo_menu: 'M011', url_menu: '/dashboard/conductor',             nombre_menu: 'Panel Conductor', padre: 'M001' },
+            { codigo_menu: 'M012', url_menu: '/dashboard/pasajero',              nombre_menu: 'Panel Pasajero',  padre: 'M001' },
+            { codigo_menu: 'M021', url_menu: '/conductores',                     nombre_menu: 'Conductores',     padre: 'M002' },
+            { codigo_menu: 'M022', url_menu: '/pasajeros',                       nombre_menu: 'Pasajeros',       padre: 'M002' },
+            { codigo_menu: 'M031', url_menu: '/dashboard/admin/usuarios',        nombre_menu: 'Solicitudes',      padre: 'M001' },
+            { codigo_menu: 'M032', url_menu: '/dashboard/admin/roles',           nombre_menu: 'Roles',            padre: 'M001' },
+            { codigo_menu: 'M033', url_menu: '/dashboard/admin/estados',         nombre_menu: 'Estados',          padre: 'M001' },
+            { codigo_menu: 'M034', url_menu: '/dashboard/admin/perfiles',        nombre_menu: 'Perfiles',         padre: 'M001' },
+            { codigo_menu: 'M035', url_menu: '/dashboard/admin/menus',           nombre_menu: 'Menús',            padre: 'M001' },
+            { codigo_menu: 'M036', url_menu: '/dashboard/admin/universidades',   nombre_menu: 'Universidades',    padre: 'M001' },
+            { codigo_menu: 'M037', url_menu: '/dashboard/admin/permisos',        nombre_menu: 'Permisos Menú',    padre: 'M001' },
+            //{ codigo_menu: 'M038', url_menu: '/dashboard/admin/solicitudes',     nombre_menu: 'Solicitudes',      padre: 'M001' },
+            { codigo_menu: 'M038', url_menu: '/dashboard/admin/administradores', nombre_menu: 'Administradores',  padre: 'M001' },
         ];
 
         console.log("🌱 Insertando menús hijo...");

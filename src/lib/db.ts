@@ -87,3 +87,28 @@ export async function getDataSource() {
     }
     return AppDataSource;
 }
+
+/* Función para ejecutar los seeders
+export async function runSeeders() {
+    const ds = await getDataSource();
+    await ds.runMigrations();
+    await ds.seed(InitSeeder);
+    await ds.seed(PerfilSeeder);
+    await ds.seed(UniversidadSeeder);
+    await ds.seed(MenuSeeder);
+    await ds.seed(MenuPermisoSeeder);
+    await ds.seed(UsuarioSeeder);
+}
+// Ejecutar los seeders al iniciar la aplicación
+getDataSource()
+    .then(() => runSeeders())
+    .catch((error) => console.error("Error al ejecutar seeders:", error));
+
+    
+// Para ejecutar manualmente los seeders, puedes usar el siguiente comando en tu terminal:
+
+    npm run db:migrate
+    npm run db:seed
+
+
+*/

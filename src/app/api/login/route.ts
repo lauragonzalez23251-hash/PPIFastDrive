@@ -32,9 +32,10 @@ export async function POST(request: Request) {
 
         // Verificamos que la cuenta esté activa
         if (usuario.estadoCuenta?.nombre_estado !== 'ACTIVO') {
-            return NextResponse.json({ error: "Tu cuenta no está activa" }, { status: 403 });
+            return NextResponse.json({ 
+                error: "Tu cuenta está inactiva. Contacta al administrador." 
+            }, { status: 403 });
         }
-
         // Devolvemos el rol para que el frontend redirija correctamente
         return NextResponse.json({
             success:    true,
@@ -45,6 +46,7 @@ export async function POST(request: Request) {
             nombreRol:  usuario.perfil?.rol?.nombre_rol,
             idPerfil:   usuario.perfil?.codigo_perfil,
             nombrePerfil: usuario.perfil?.nombre_perfil,
+            
         });
 
     } catch (error: any) {

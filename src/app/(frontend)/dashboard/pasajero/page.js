@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation'; // <--- 1. IMPORTANTE: Importa el router
+import { useRouter } from 'next/navigation'; 
 
 export default function DashboardPasajero() {
   const [nombre, setNombre] = useState('');

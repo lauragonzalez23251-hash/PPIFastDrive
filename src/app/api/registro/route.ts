@@ -18,23 +18,38 @@ export async function POST(request: Request) {
         const uniRepo     = dataSource.getRepository(Universidad);
         const uniEstRepo  = dataSource.getRepository(UniversidadEstudiante);
 
-        // --- PASO 1: Validar dominio del correo (solo pasajeros y mixtos) ---
+        // Validar dominio del correo (pasajeros y mixtos)
         if (body.idRol === 3 || body.idRol === 4) {
             const universidad = await uniRepo.findOne({ where: { nit_uni: body.nitUni } });
-
-            if (!universidad) {
-                return NextResponse.json({ error: "Universidad no encontrada" }, { status: 400 });
-            }
+            if (!universidad) return NextResponse.json({ error: "Universidad no encontrada" }, { status: 400 });
 
             const dominioCorreo = body.email.split('@')[1];
             if (!dominioCorreo || dominioCorreo !== universidad.dominio_correo_uni) {
                 return NextResponse.json({
-                    error: `El correo debe ser institucional. Dominio requerido: @${universidad.dominio_correo_uni}`
+                    error: `Dominio requerido: @${universidad.dominio_correo_uni}`
                 }, { status: 400 });
+            }
+
+            // Validar que el documento no esté ya matriculado en esa universidad
+            const usuarioExistente = await usuarioRepo.findOne({
+                where: { documento_identidad_user: body.documento }
+            });
+            if (usuarioExistente) {
+                const yaVinculado = await uniEstRepo.findOne({
+                    where: {
+                        id_user: usuarioExistente.id_user,
+                        nit_uni: body.nitUni
+                    }
+                });
+                if (yaVinculado) {
+                    return NextResponse.json({
+                        error: "Ya estás matriculado en esta universidad."
+                    }, { status: 400 });
+                }
             }
         }
 
-        // --- PASO 2: Buscar el perfil según rol y universidad ---
+        // Buscar perfil
         let nombrePerfil = '';
         if (body.idRol === 2) {
             nombrePerfil = 'ConductorCarro';
@@ -50,32 +65,28 @@ export async function POST(request: Request) {
                 '800.116.217-2':  'Uniminuto',
             };
             const uniCorta = mapaUniversidad[body.nitUni] || '';
-            nombrePerfil = body.idRol === 4
-                ? `Mixto ${uniCorta}`
-                : `Estudiante ${uniCorta}`;
+            nombrePerfil = body.idRol === 4 ? `Mixto ${uniCorta}` : `Estudiante ${uniCorta}`;
         }
 
         const perfil = await perfilRepo.findOne({ where: { nombre_perfil: nombrePerfil } });
-        if (!perfil) {
-            return NextResponse.json({ error: `Perfil '${nombrePerfil}' no encontrado` }, { status: 400 });
-        }
+        if (!perfil) return NextResponse.json({ error: `Perfil '${nombrePerfil}' no encontrado` }, { status: 400 });
 
-        // --- PASO 3: Buscar estados iniciales ---
         const estadoCuenta = await estadoRepo.findOne({
             where: { nombre_estado: 'PENDIENTE', categoria: 'VERIFICACION' }
         });
-        const estadoVerificacion = await estadoRepo.findOne({
-            where: { nombre_estado: 'Pendiente', categoria: 'CONDUCTOR' }
-        });
+        if (!estadoCuenta) return NextResponse.json({ error: "Estado PENDIENTE no encontrado" }, { status: 400 });
 
-        if (!estadoCuenta) {
-            return NextResponse.json({ error: "Estado PENDIENTE no encontrado" }, { status: 400 });
-        }
-
-        // --- PASO 4: Encriptar contraseña ---
+        // --- Encriptar contraseña ---
         const contrasena = await bcrypt.hash(body.password, 10);
 
-        // --- PASO 5: Crear y guardar usuario ---
+        // --- Convertir foto de perfil de base64 a Buffer ---
+        let fotoPerfBuffer: Buffer | undefined = undefined;
+        if (body.fotoPerfil) {
+            const base64Data = body.fotoPerfil.replace(/^data:image\/\w+;base64,/, '');
+            fotoPerfBuffer = Buffer.from(base64Data, 'base64');
+        }
+
+        
         const nuevoUsuario = usuarioRepo.create({
             nombre_user:              body.nombre,
             primer_apellido:          body.primerApellido,
@@ -85,46 +96,52 @@ export async function POST(request: Request) {
             fecha_nacimiento_user:    new Date(body.fechaNac),
             correo_personal_user:     body.email,
             contrasena,
+            foto_perf:                fotoPerfBuffer,
             perfil,
             estadoCuenta,
-            estadoVerificacion: estadoVerificacion || undefined,
         });
 
         const usuarioGuardado = await usuarioRepo.save(nuevoUsuario);
-        console.log("Usuario guardado con ID:", usuarioGuardado.id_user);
 
-        // --- PASO 6: Vincular estudiante/mixto con su universidad ---
+        // --- Vincular con universidad si es pasajero o mixto ---
         if (body.idRol === 3 || body.idRol === 4) {
+
+            // Convertir certificado de base64 a Buffer
+            let certBuffer: Buffer | undefined = undefined;
+            if (body.certificado) {
+                const base64Cert = body.certificado.replace(/^data:\w+\/\w+;base64,/, '');
+                certBuffer = Buffer.from(base64Cert, 'base64');
+            }
+
+            const estadoVinculacion = await estadoRepo.findOne({
+                where: { nombre_estado: 'Pendiente de Verificación', categoria: 'VINCULACION' }
+            });
+
             const vinculacion = uniEstRepo.create({
                 nit_uni:                  body.nitUni,
                 id_user:                  usuarioGuardado.id_user,
                 correo_institucional_une: body.email,
+                certificado_estudio_une:  certBuffer,
                 universidad:              { nit_uni: body.nitUni } as any,
                 usuario:                  usuarioGuardado,
-                estado:                   estadoCuenta,
+                estado:                   estadoVinculacion || estadoCuenta,
             });
             await uniEstRepo.save(vinculacion);
         }
 
         return NextResponse.json({
-            message: "Usuario registrado con éxito, pendiente de aprobación",
+            message: "Registro exitoso, pendiente de aprobación",
             userId:  usuarioGuardado.id_user
         }, { status: 201 });
 
     } catch (error: any) {
-        console.error("Error en el registro:", error);
-
-        let mensajeError = "Error al registrar el usuario";
-        if (error.errorNum === 1 || error.code === 'ORA-00001') {
-            if (error.message?.includes('UK_CORREO_USER')) {
-                mensajeError = "El correo ya está registrado.";
-            } else if (error.message?.includes('UK_DOC_USER')) {
-                mensajeError = "El documento ya está registrado.";
-            } else if (error.message?.includes('UK_CELULAR_USER')) {
-                mensajeError = "El celular ya está registrado.";
-            }
+        console.error("❌ Error:", error);
+        let mensajeError = "Error al registrar";
+        if (error.errorNum === 1) {
+            if (error.message?.includes('UK_CORREO_USER')) mensajeError = "El correo ya está registrado.";
+            else if (error.message?.includes('UK_DOC_USER')) mensajeError = "El documento ya está registrado.";
+            else if (error.message?.includes('UK_CELULAR_USER')) mensajeError = "El celular ya está registrado.";
         }
-
         return NextResponse.json({ error: mensajeError }, { status: 500 });
     }
 }

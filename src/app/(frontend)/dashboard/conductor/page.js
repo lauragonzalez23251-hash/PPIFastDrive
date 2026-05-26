@@ -1,11 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation'; // Importación necesaria
+import { useRouter } from 'next/navigation'; 
 
 export default function DashboardConductor() {
-  const router = useRouter(); // <--- 1. Faltaba definir el router
+  const router = useRouter(); 
   const [rol, setRol] = useState(null);
-  const [nombre, setNombre] = useState(''); // <--- 2. Faltaba el estado para el nombre
+  const [nombre, setNombre] = useState(''); 
   const [modo, setModo] = useState('conductor');
 
   useEffect(() => {
