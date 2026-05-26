@@ -1,8 +1,8 @@
 'use client';
 import { useState, useRef } from 'react';
-import Link from 'next/link';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import UserNavbar from '@/components/UserNavbar';
+import useAuth from '@/lib/useAuth';
+
 
 import './conductores.css';
 
@@ -30,6 +30,7 @@ function formatHora(h) {
 }
 
 export default function ConductoresPage() {
+  const { nombre, idRol, listo, cerrarSesion } = useAuth([2, 4]);
   const [trips, setTrips] = useState([]);
   const [toast, setToast] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
@@ -108,9 +109,10 @@ export default function ConductoresPage() {
     document.getElementById('formCard')?.scrollIntoView({ behavior: 'smooth' });
   }
 
+  if (!listo) return null;
   return (
     <div className="conductores-page">
-      <Navbar />
+      <UserNavbar nombre={nombre} idRol={idRol} onCerrarSesion={cerrarSesion} />
 
       <main className="conductores-main">
         <div className="panel-grid">
@@ -262,40 +264,6 @@ export default function ConductoresPage() {
           </div>
         </div>
       </main>
-
-      {/* Cómo funciona */}
-      <section className="how-section">
-        <div className="how-container">
-          <h2 className="how-title">CÓMO <span>FUNCIONA</span></h2>
-          <p className="how-sub">Publica tu primer viaje en menos de un minuto</p>
-          <div className="steps-grid">
-            {[
-              { n: 1, title: 'Regístrate', desc: 'Crea tu cuenta como conductor y verifica tu identidad para unirte a la plataforma.' },
-              { n: 2, title: 'Crea tu ruta', desc: 'Ingresa tu barrio de origen, universidad de destino, hora de salida y aporte por persona.' },
-              { n: 3, title: 'Publica el viaje', desc: 'Con un clic tu viaje queda visible para los estudiantes de tu ruta que buscan cupo.' },
-              { n: 4, title: '¡A conducir!', desc: 'Recoge a tus pasajeros, genera ingresos extra y ayuda a tu comunidad universitaria.' },
-            ].map(s => (
-              <div key={s.n} className="step-card">
-                <div className="step-num">{s.n}</div>
-                <div className="step-title">{s.title}</div>
-                <div className="step-desc">{s.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="cta-section">
-        <h2>¿LISTO PARA <span>DESPEGAR</span>?</h2>
-        <p>Únete a cientos de conductores que ya generan ingresos con FastDrive.</p>
-        <button className="btn-primary cta-btn" onClick={scrollToForm}>
-          <i className="bi bi-rocket-takeoff-fill"></i> COMENZAR AHORA
-        </button>
-      </section>
-
-      <Footer />
-
       {/* Toast */}
       <div className={`toast ${toastVisible ? 'show' : ''}`}>
         <span>{toast}</span>

@@ -1,13 +1,14 @@
 'use client';
 import { useState } from 'react';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import UserNavbar from '@/components/UserNavbar';
+import useAuth from '@/lib/useAuth';
 
 const LABELS = ['Muy malo', 'Malo', 'Regular', 'Bueno', '¡Excelente!'];
 const MAX_CHARS = 400;
 
 export default function ContactanosPage() {
-  const [nombre, setNombre] = useState('');
+  const { nombre, idRol, listo, cerrarSesion } = useAuth([2, 3, 4]);
+  const [nombreForm, setNombreForm] = useState('');
   const [correo, setCorreo] = useState('');
   const [mensaje, setMensaje] = useState('');
   const [rating, setRating] = useState(0);
@@ -36,7 +37,7 @@ export default function ContactanosPage() {
   }
 
   function resetForm() {
-    setNombre('');
+    setNombreForm('');
     setCorreo('');
     setMensaje('');
     setRating(0);
@@ -46,21 +47,20 @@ export default function ContactanosPage() {
 
   const displayRating = hovered || rating;
 
+  if (!listo) return null;
+
   return (
     <div style={{ background: '#f0f2f8', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Navbar />
+      <UserNavbar nombre={nombre} idRol={idRol} onCerrarSesion={cerrarSesion} />
 
       <section className="contact-section">
         <div className="contact-wrapper">
-
           <div className="contact-header">
             <h1>CONTÁCTANOS</h1>
             <p>¿Tienes preguntas o sugerencias? Escríbenos.</p>
           </div>
 
           <div className="contact-grid">
-
-            {/* Columna izquierda */}
             <div className="col-left">
               <div className="info-list">
                 <div className="info-item">
@@ -77,7 +77,6 @@ export default function ContactanosPage() {
                 </div>
               </div>
 
-              {/* Calificación */}
               <div className="rating-box">
                 <p className="rating-title"><i className="bi bi-star-fill"></i> Califica tu experiencia</p>
                 <div className="stars">
@@ -86,8 +85,8 @@ export default function ContactanosPage() {
                       className={`bi bi-star-fill star ${val <= displayRating ? (hovered ? 'hovered' : 'active') : ''}`}
                       onMouseEnter={() => setHovered(val)}
                       onMouseLeave={() => setHovered(0)}
-                      onClick={() => setRating(val)}
-                    ></i>
+                      onClick={() => setRating(val)}>
+                    </i>
                   ))}
                 </div>
                 <p className={`stars-label ${rating > 0 ? 'rated' : ''}`}>
@@ -96,13 +95,12 @@ export default function ContactanosPage() {
               </div>
             </div>
 
-            {/* Columna derecha */}
             <div className="col-right">
               {!submitted ? (
                 <div className="form-step">
                   <div className="form-field">
                     <input type="text" placeholder="Tu nombre"
-                      value={nombre} onChange={e => setNombre(e.target.value)} />
+                      value={nombreForm} onChange={e => setNombreForm(e.target.value)} />
                   </div>
                   <div className="form-field">
                     <input type="email" placeholder="Tu correo"
@@ -139,12 +137,9 @@ export default function ContactanosPage() {
                 </div>
               )}
             </div>
-
           </div>
         </div>
       </section>
-
-      <Footer />
     </div>
   );
 }

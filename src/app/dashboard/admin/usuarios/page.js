@@ -58,6 +58,22 @@ export default function UsuariosAdminPage() {
                                 <span style={{ display: 'inline-block', marginTop: '8px', padding: '2px 10px', borderRadius: '99px', background: '#e0e7ff', color: '#4338ca', fontSize: '0.75rem', fontWeight: 600 }}>
                                     {u.rol} — {u.perfil}
                                 </span>
+                                {/* ← AGREGA AQUÍ */}
+                                {u.foto_perf && (
+                                    <div style={{ marginTop: '12px' }}>
+                                        <img src={u.foto_perf} alt="Foto perfil"
+                                            style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #e2e8f0' }} />
+                                    </div>
+                                )}
+
+                                {u.certificado && (
+                                    <div style={{ marginTop: '8px' }}>
+                                        <a href={u.certificado} target="_blank" rel="noopener noreferrer"
+                                            style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px', color: '#16a34a', fontSize: '0.8rem', textDecoration: 'none', fontWeight: 600 }}>
+                                            📄 Ver Certificado
+                                        </a>
+                                    </div>
+                                )}
                             </div>
                             <div style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
                                 <button onClick={() => procesarSolicitud(u.id_user, 'aprobar')}

@@ -17,8 +17,9 @@ export class UniversidadEstudiante {
     @Column({ type: "varchar2", length: 120, nullable: false, name: "CORREO_INSTITUCIONAL_UNE" })
     correo_institucional_une!: string;
 
-    @Column({ type: "blob", nullable: true, name: "CERTIFICADO_ESTUDIO_UNE" })
-    certificado_estudio_une!: Buffer; // Los BLOB se manipulan como instancias de Buffer en Node.js/TS
+    @Column({ type: "varchar2", length: 500, nullable: true, name: "CERTIFICADO_ESTUDIO_UNE" })
+    certificado_estudio_une!: string; // Los BLOB se manipulan como instancias de Buffer en Node.js/TS
+    // se cambio BLOB por varchar2 para evitar problemas de compatibilidad con Oracle y TypeORM, se guardará la ruta del archivo o un identificador en lugar del contenido binario
 
     // --- LLAVES FORÁNEAS QUE MAPEAN LAS RELACIONES ---
 

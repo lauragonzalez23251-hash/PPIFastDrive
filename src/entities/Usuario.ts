@@ -38,9 +38,9 @@ export class Usuario {
     @CreateDateColumn({ type: "date", default: () => "SYSDATE", name: "FECHA_REGISTRO" })
     fecha_registro!: Date;
 
-    @Column({ type: "blob", nullable: true, name: "FOTO_PERF" })
-    foto_perf!: Buffer; // Los campos BLOB en TypeScript se manejan como Buffer
-
+    @Column({ type: "varchar2", length: 500, nullable: true, name: "FOTO_PERF" })
+    foto_perf!: string; // Los campos BLOB en TypeScript se manejan como Buffer
+    // se cambio BLOB por varchar2 para evitar problemas de compatibilidad con Oracle y TypeORM, se guardará la ruta del archivo o un identificador en lugar del contenido binario
     // --- LLAVES FORÁNEAS (RELACIONES) ---
 
     // Relación obligatoria por: CONSTRAINT NN_PERFIL_USU CHECK (CODIGO_PERFIL IS NOT NULL)

@@ -1,8 +1,7 @@
 'use client';
 import { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
+import UserNavbar from '@/components/UserNavbar';
+import useAuth from '@/lib/useAuth';
 
 const VIAJES = [];
 
@@ -47,6 +46,7 @@ export default function PasajerosPage() {
   const [toast, setToast] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
   const toastTimer = useRef(null);
+  const {nombre, idRol, listo, cerrarSesion} = useAuth([3,4]);
 
   function showToast(msg) {
     setToast(msg);
@@ -119,9 +119,12 @@ export default function PasajerosPage() {
     requestAnimationFrame(() => cards.forEach(c => c.classList.add('visible')));
   }, [visibleTrips]);
 
+
+
+  if(!listo) return null;
   return (
     <div style={{ background: '#eef0f7', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Navbar />
+      <UserNavbar nombre={nombre} idRol={idRol} onCerrarSesion={cerrarSesion} />
 
       <main className="pas-main">
         <div className="pas-grid">
@@ -279,40 +282,7 @@ export default function PasajerosPage() {
         </div>
       </main>
 
-      {/* Cómo funciona */}
-      <section className="how-section">
-        <div className="why-container">
-          <h2 className="section-title" style={{ textAlign: 'center' }}>CÓMO <span>FUNCIONA</span></h2>
-          <p className="section-sub" style={{ textAlign: 'center' }}>Reserva tu viaje en menos de un minuto</p>
-          <div className="steps-grid">
-            {[
-              { n:1, title:'Busca tu ruta', desc:'Ingresa tu barrio y universidad.' },
-              { n:2, title:'Elige tu viaje', desc:'Revisa horario, precio y calificación.' },
-              { n:3, title:'Reserva tu cupo', desc:'Confirma con un clic.' },
-              { n:4, title:'¡Viaja tranquilo!', desc:'Comparte ubicación en tiempo real.' },
-            ].map(s => (
-              <div key={s.n} className="step-card">
-                <div className="step-num">{s.n}</div>
-                <div className="step-title">{s.title}</div>
-                <div className="step-desc">{s.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="cta-section">
-        <div className="why-container">
-          <h2>¿LISTO PARA <span>DESPEGAR</span>?</h2>
-          <p>Únete a cientos de estudiantes que ya viajan inteligente con FastDrive.</p>
-          <Link href="/login" className="btn-cta">
-            <i className="bi bi-rocket-takeoff-fill"></i> COMENZAR AHORA
-          </Link>
-        </div>
-      </section>
-
-      <Footer />
+    
 
       {/* Modal */}
       <div className={`modal-overlay ${modalOpen ? 'open' : ''}`} onClick={e => { if (e.target.classList.contains('modal-overlay')) { setModalOpen(false); setActiveTrip(null); } }}>

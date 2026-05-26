@@ -20,6 +20,12 @@ async function runMigration() {
         await AppDataSource.query(`ALTER TABLE MENU_PERMISO ADD PUEDE_ELIMINAR CHAR(1) DEFAULT 'N' NOT NULL`);
         console.log("PUEDE_ELIMINAR agregada");
 
+        await AppDataSource.query(`ALTER TABLE USUARIO MODIFY FOTO_PERF VARCHAR2(500)`);
+        console.log("FOTO_PERF cambiada a VARCHAR2");
+
+        await AppDataSource.query(`ALTER TABLE UNIVERSIDAD_ESTUDIANTE MODIFY CERTIFICADO_ESTUDIO_UNE VARCHAR2(500)`);
+        console.log("CERTIFICADO_ESTUDIO_UNE cambiada a VARCHAR2");
+
         console.log(" Migración ejecutada con éxito!");
 
     } catch (error: any) {

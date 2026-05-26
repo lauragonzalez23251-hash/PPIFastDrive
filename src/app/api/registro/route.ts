@@ -79,13 +79,6 @@ export async function POST(request: Request) {
         // --- Encriptar contraseña ---
         const contrasena = await bcrypt.hash(body.password, 10);
 
-        // --- Convertir foto de perfil de base64 a Buffer ---
-        let fotoPerfBuffer: Buffer | undefined = undefined;
-        if (body.fotoPerfil) {
-            const base64Data = body.fotoPerfil.replace(/^data:image\/\w+;base64,/, '');
-            fotoPerfBuffer = Buffer.from(base64Data, 'base64');
-        }
-
         
         const nuevoUsuario = usuarioRepo.create({
             nombre_user:              body.nombre,
@@ -96,7 +89,6 @@ export async function POST(request: Request) {
             fecha_nacimiento_user:    new Date(body.fechaNac),
             correo_personal_user:     body.email,
             contrasena,
-            foto_perf:                fotoPerfBuffer,
             perfil,
             estadoCuenta,
         });
@@ -106,12 +98,6 @@ export async function POST(request: Request) {
         // --- Vincular con universidad si es pasajero o mixto ---
         if (body.idRol === 3 || body.idRol === 4) {
 
-            // Convertir certificado de base64 a Buffer
-            let certBuffer: Buffer | undefined = undefined;
-            if (body.certificado) {
-                const base64Cert = body.certificado.replace(/^data:\w+\/\w+;base64,/, '');
-                certBuffer = Buffer.from(base64Cert, 'base64');
-            }
 
             const estadoVinculacion = await estadoRepo.findOne({
                 where: { nombre_estado: 'Pendiente de Verificación', categoria: 'VINCULACION' }
@@ -121,7 +107,6 @@ export async function POST(request: Request) {
                 nit_uni:                  body.nitUni,
                 id_user:                  usuarioGuardado.id_user,
                 correo_institucional_une: body.email,
-                certificado_estudio_une:  certBuffer,
                 universidad:              { nit_uni: body.nitUni } as any,
                 usuario:                  usuarioGuardado,
                 estado:                   estadoVinculacion || estadoCuenta,

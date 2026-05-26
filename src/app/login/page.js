@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation'; // Importación para redirección
-import Navbar from '../../../components/Navbar';
+import Navbar from '../../components/Navbar';
 
 export default function LoginPage() {
   // --- REFERENCIAS PARA ANIMACIONES Y DOM ---
@@ -50,12 +50,14 @@ export default function LoginPage() {
         // Redirección inteligente basada en los roles de Oracle
         // Conductor = 2, Pasajero = 3, Mixto = 4
       if (data.nombreRol === 'ADMINISTRADOR') {
-        router.push('/dashboard/admin');
-        } else if (data.idRol === 2 || data.idRol === 4) {
-            router.push('/dashboard/conductor');
-        } else {
-            router.push('/dashboard/pasajero');
-        }
+              router.push('/dashboard/admin');
+          } else if (data.idRol === 2) {
+              router.push('/dashboard/conductor');
+          } else if (data.idRol === 4) {
+              router.push('/dashboard/mixto');
+          } else {
+              router.push('/dashboard/pasajero');
+          }
       } else {
         alert(data.error || "Credenciales inválidas");
       }
