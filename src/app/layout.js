@@ -1,9 +1,8 @@
 import "reflect-metadata";
 import { Bebas_Neue, Nunito } from 'next/font/google';
 import './globals.css';
-
-
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import Script from 'next/script';
 
 const bebasNeue = Bebas_Neue({
   weight: '400',
@@ -24,8 +23,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="es">
-      {/* Aquí se aplican las variables de las fuentes a todo el cuerpo de la web */}
       <body className={`${bebasNeue.variable} ${nunito.variable}`}>
+        <Script
+          src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY}&libraries=places`}
+          strategy="beforeInteractive"
+        />
         {children}
       </body>
     </html>

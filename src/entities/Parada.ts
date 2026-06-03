@@ -23,6 +23,10 @@ export class Parada {
     @Column({ type: "varchar2", length: 2, nullable: false, name: "ES_UNIVERSIDAD_PDS" })
     es_universidad_pds!: string;
 
+    //nuevo campo para costo adicional
+    @Column({ type: "number", precision: 10, scale: 2, nullable: true, name: "COSTO_ADICIONAL_PDS", default: 0 })
+    costo_adicional_pds!: number;
+
     // --- LLAVES FORÁNEAS (RELACIONES) ---
 
     @ManyToOne(() => RutaConductor, { nullable: false })

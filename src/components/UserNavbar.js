@@ -36,8 +36,9 @@ const menuMixto = [
             justifyContent: 'space-between', height: '60px',
             position: 'sticky', top: 0, zIndex: 100
         }}>
-            <div style={{ color: '#a5b4fc', fontWeight: 700, fontSize: '1.1rem' }}>
-                🚗 FastDrive
+            <div style={{ color: '#a5b4fc', fontWeight: 700, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <img src="/img/FastDrive.png"  style={{ height: '32px', width: 'auto' }} />
+                FastDrive
             </div>
 
             <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>

@@ -2,6 +2,8 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, Jo
 import { Universidad } from "./Universidad";
 import { Conductor } from "./Conductor";
 import { Estado } from "./Estado";
+import { OneToMany } from "typeorm";
+
 
 @Entity("RUTA_CONDUCTOR")
 export class RutaConductor {
@@ -33,6 +35,21 @@ export class RutaConductor {
 
     @Column({ type: "number", precision: 10, scale: 8, nullable: true, name: "PUNTO_DESTINO_LONGITUD_RC" })
     punto_destino_longitud_rc!: number;
+
+    @Column({ type: "varchar2", length: 50, nullable: true, name: "DIAS_SEMANA" })
+    dias_semana!: string;
+
+    @Column({ type: "varchar2", length: 300, nullable: true, name: "ORIGEN_NOMBRE" })
+    origen_nombre!: string;
+
+    @Column({ type: "varchar2", length: 300, nullable: true, name: "DESTINO_NOMBRE" })
+    destino_nombre!: string;
+
+    @OneToMany(() => {
+        const { Parada } = require("./Parada");
+        return Parada;
+    }, (parada: any) => parada.rutaConductor)
+    paradas!: any[];
 
     // --- LLAVES FORÁNEAS (RELACIONES) ---
 
