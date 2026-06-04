@@ -3,9 +3,12 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import UserNavbar from '@/components/UserNavbar';
 import useAuth from '@/lib/useAuth';
+import usePermisos from '@/lib/usePermisos';       // ← NUEVO
+import SinPermiso from '@/components/SinPermiso';  // ← NUEVO
 
 function CalificacionesContent() {
     const { nombre, idRol, listo, cerrarSesion } = useAuth([2, 4]);
+    const { puedeLeer, puedeCrear, cargando: cargandoPermisos } = usePermisos(); // ← NUEVO
     const searchParams = useSearchParams();
     const router = useRouter();
     const viajeId = searchParams.get('viajeId');
@@ -78,7 +81,16 @@ function CalificacionesContent() {
         } catch { showToast('❌ Error de conexión'); }
     }
 
-    if (!listo) return null;
+    // ← GUARDS en orden correcto
+    if (!listo || cargandoPermisos) return null;
+
+    // ← BLOQUEO si no puede leer
+    if (!puedeLeer) return (
+        <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+            <UserNavbar nombre={nombre} idRol={idRol} onCerrarSesion={cerrarSesion} />
+            <SinPermiso />
+        </div>
+    );
 
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
@@ -125,10 +137,13 @@ function CalificacionesContent() {
                                         ✅ Calificado
                                     </span>
                                 ) : (
-                                    <button onClick={() => abrirModal(p)}
-                                        style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
-                                        ⭐ Calificar
-                                    </button>
+                                    // ← Solo muestra botón calificar si puede crear
+                                    puedeCrear && (
+                                        <button onClick={() => abrirModal(p)}
+                                            style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
+                                            ⭐ Calificar
+                                        </button>
+                                    )
                                 )}
                             </div>
                         ))}
@@ -136,15 +151,13 @@ function CalificacionesContent() {
                 )}
             </div>
 
-            {/* Modal calificación */}
-            {modalAbierto && pasajeroSeleccionado && (
+            {/* Modal - solo si puede crear */}
+            {modalAbierto && pasajeroSeleccionado && puedeCrear && (
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
                     <div style={{ background: 'white', padding: '28px', borderRadius: '12px', width: '420px' }}>
                         <h3 style={{ margin: '0 0 4px', color: '#1e293b' }}>Calificar a {pasajeroSeleccionado.nombre}</h3>
                         <p style={{ color: '#64748b', fontSize: '0.85rem', margin: '0 0 20px' }}>¿Cómo fue tu experiencia con este pasajero?</p>
                         <form onSubmit={enviarCalificacion}>
-
-                            {/* Estrellas */}
                             <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginBottom: '20px' }}>
                                 {[1,2,3,4,5].map(star => (
                                     <span key={star}
@@ -156,13 +169,11 @@ function CalificacionesContent() {
                                     </span>
                                 ))}
                             </div>
-
                             {puntuacion > 0 && (
                                 <p style={{ textAlign: 'center', color: '#64748b', fontSize: '0.85rem', margin: '0 0 16px' }}>
                                     {['', 'Muy malo', 'Malo', 'Regular', 'Bueno', '¡Excelente!'][puntuacion]}
                                 </p>
                             )}
-
                             <div style={{ marginBottom: '20px' }}>
                                 <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', fontWeight: 600 }}>
                                     Comentario (opcional)
@@ -171,7 +182,6 @@ function CalificacionesContent() {
                                     rows={3} placeholder="¿Algo que destacar?"
                                     style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', resize: 'vertical', fontFamily: 'sans-serif', boxSizing: 'border-box' }} />
                             </div>
-
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                                 <button type="button" onClick={() => setModalAbierto(false)}
                                     style={{ padding: '10px 16px', background: '#e2e8f0', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>

@@ -14,8 +14,8 @@ export class RutaConductor {
     @Column({ type: "date", nullable: false, name: "HORA_SALIDA_RC" })
     hora_salida_rc!: Date;
 
-    @Column({ type: "date", nullable: true, name: "HORA_ESTIPULADA_LLEGADA_RC" })
-    hora_estipulada_llegada_rc!: Date;
+    //@Column({ type: "date", nullable: true, name: "HORA_ESTIPULADA_LLEGADA_RC" })
+    //hora_estipulada_llegada_rc!: Date;
 
     @CreateDateColumn({ type: "date", default: () => "SYSDATE", name: "FECHA_PUBLICACION_RC" })
     fecha_publicacion_rc!: Date;

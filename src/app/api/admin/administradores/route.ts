@@ -40,13 +40,18 @@ export async function POST(request: Request) {
         const perfilRepo  = ds.getRepository(Perfil);
         const estadoRepo  = ds.getRepository(Estado);
 
-        const perfil = await perfilRepo.findOne({ where: { nombre_perfil: 'AdministradorGeneral' } });
+        const nombrePerfil = body.codigo_perfil === '21' || body.codigo_perfil === 21 
+        ? 'AdministradorSecundario' 
+        : 'AdministradorGeneral';
+
+        const perfil = await perfilRepo.findOne({ where: { nombre_perfil: nombrePerfil } });
         if (!perfil) return NextResponse.json({ error: "Perfil administrador no encontrado" }, { status: 400 });
 
        const estadoCuenta = body.id_estado
             ? await estadoRepo.findOne({ where: { id_estado: Number(body.id_estado) } })
             : await estadoRepo.findOne({ where: { nombre_estado: 'ACTIVO', categoria: 'CUENTA' } });
-        if (!estadoCuenta) return NextResponse.json({ error: "Estado no encontrado" }, { status: 400 });
+        
+            if (!estadoCuenta) return NextResponse.json({ error: "Estado no encontrado" }, { status: 400 });
 
         const contrasena = await bcrypt.hash(body.password, 10);
 

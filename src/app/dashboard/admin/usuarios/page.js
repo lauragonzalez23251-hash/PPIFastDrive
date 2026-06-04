@@ -2,9 +2,10 @@
 import { useEffect, useState } from 'react';
 import AdminSidebar from '@/components/AdminSidebar';
 import useAdminAuth from '@/lib/useAdminAuth';
+import SinPermiso from '@/components/SinPermiso';
 
 export default function UsuariosAdminPage() {
-    const { nombre, listo } = useAdminAuth();
+    const { nombre, listo, acceso, puedeCrear, puedeActualizar, puedeEliminar } = useAdminAuth();
     const [tab, setTab] = useState('usuarios'); // 'usuarios' | 'universidades'
 
     // Solicitudes usuarios
@@ -81,6 +82,14 @@ export default function UsuariosAdminPage() {
     }
 
     if (!listo) return null;
+    if (!acceso) return (
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <AdminSidebar />
+        <main style={{ marginLeft: '240px', flex: 1, background: '#f8fafc' }}>
+            <SinPermiso />
+        </main>
+    </div>
+);
 
     const pendientesUsuarios = solicitudes.length;
     const pendientesUni = solicitudesUni.length;
@@ -155,14 +164,18 @@ export default function UsuariosAdminPage() {
                                         )}
                                     </div>
                                     <div style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
+                                         {puedeActualizar && (
                                         <button onClick={() => procesarSolicitud(u.id_user, 'aprobar')}
                                             style={{ padding: '8px 16px', background: '#22c55e', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
                                             ✅ Aprobar
                                         </button>
+                                    )}
+                                    {puedeEliminar && (
                                         <button onClick={() => setUsuarioSeleccionado(u.id_user)}
                                             style={{ padding: '8px 16px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
                                             ❌ Rechazar
                                         </button>
+                                         )}
                                     </div>
                                 </div>
                                 {usuarioSeleccionado === u.id_user && (
@@ -226,14 +239,18 @@ export default function UsuariosAdminPage() {
                                         )}
                                     </div>
                                     <div style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
+                                        {puedeActualizar && (
                                         <button onClick={() => procesarSolicitudUni(s.nit_uni, s.id_user, 'aprobar')}
                                             style={{ padding: '8px 16px', background: '#22c55e', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
                                             ✅ Aprobar
                                         </button>
+                                    )}
+                                    {puedeEliminar && (
                                         <button onClick={() => setUniSeleccionada(`${s.nit_uni}-${s.id_user}`)}
                                             style={{ padding: '8px 16px', background: '#ef4444', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
                                             ❌ Rechazar
                                         </button>
+                                            )}
                                     </div>
                                 </div>
                                 {uniSeleccionada === `${s.nit_uni}-${s.id_user}` && (

@@ -2,9 +2,10 @@
 import { useState, useEffect } from 'react';
 import AdminSidebar from '@/components/AdminSidebar';
 import useAdminAuth from '@/lib/useAdminAuth';
+import SinPermiso from '@/components/SinPermiso';
 
 export default function PermisosAdminPage() {
-    const { nombre, listo } = useAdminAuth();
+    const { nombre, listo, acceso, puedeCrear, puedeActualizar, puedeEliminar } = useAdminAuth();
     const [permisos, setPermisos] = useState([]);
     const [menus, setMenus] = useState([]);
     const [perfiles, setPerfiles] = useState([]);
@@ -71,6 +72,14 @@ export default function PermisosAdminPage() {
     );
 
     if (!listo) return null;
+    if (!acceso) return (
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <AdminSidebar />
+        <main style={{ marginLeft: '240px', flex: 1, background: '#f8fafc' }}>
+            <SinPermiso />
+        </main>
+    </div>
+);
 
     return (
         <div suppressHydrationWarning style={{ display: 'flex', minHeight: '100vh', fontFamily: 'sans-serif' }}>
@@ -83,10 +92,12 @@ export default function PermisosAdminPage() {
                         <h2 style={{ color: '#1e293b', margin: 0 }}>Permisos de Menú</h2>
                         <p style={{ color: '#64748b', margin: '4px 0 0' }}>S = Sí puede, N = No puede</p>
                     </div>
-                    <button onClick={() => { setEditando(null); setForm({ codigo_menu: '', codigo_perfil: '', puede_crear: 'N', puede_leer: 'S', puede_actualizar: 'N', puede_eliminar: 'N' }); setModalAbierto(true); }}
-                        style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
-                        + Nuevo Permiso
-                    </button>
+                    {puedeCrear && (
+                        <button onClick={() => { setEditando(null); setForm({ codigo_menu: '', codigo_perfil: '', puede_crear: 'N', puede_leer: 'S', puede_actualizar: 'N', puede_eliminar: 'N' }); setModalAbierto(true); }}
+                            style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                            + Nuevo Permiso
+                        </button>
+                    )}
                 </div>
 
                 {cargando ? <p>Cargando permisos...</p> : (
@@ -113,14 +124,18 @@ export default function PermisosAdminPage() {
                                         <td style={{ padding: '12px 16px', textAlign: 'center' }}>{badge(p.puede_actualizar)}</td>
                                         <td style={{ padding: '12px 16px', textAlign: 'center' }}>{badge(p.puede_eliminar)}</td>
                                         <td style={{ padding: '12px 16px', textAlign: 'center' }}>
-                                            <button onClick={() => { setEditando(p); setForm({ codigo_menu: p.codigo_menu, codigo_perfil: p.codigo_perfil, puede_crear: p.puede_crear, puede_leer: p.puede_leer, puede_actualizar: p.puede_actualizar, puede_eliminar: p.puede_eliminar }); setModalAbierto(true); }}
-                                                style={{ background: '#e0e7ff', border: 'none', color: '#4f46e5', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', marginRight: '8px' }}>
-                                                ✏️ Editar
-                                            </button>
-                                            <button onClick={() => eliminar(p.codigo_menu, p.codigo_perfil)}
-                                                style={{ background: '#fee2e2', border: 'none', color: '#ef4444', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>
-                                                🗑️ Eliminar
-                                            </button>
+                                            {puedeActualizar && (
+                                                <button onClick={() => { setEditando(p); setForm({ codigo_menu: p.codigo_menu, codigo_perfil: p.codigo_perfil, puede_crear: p.puede_crear, puede_leer: p.puede_leer, puede_actualizar: p.puede_actualizar, puede_eliminar: p.puede_eliminar }); setModalAbierto(true); }}
+                                                    style={{ background: '#e0e7ff', border: 'none', color: '#4f46e5', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', marginRight: '8px' }}>
+                                                    ✏️ Editar
+                                                </button>
+                                            )}
+                                            {puedeEliminar && (
+                                                <button onClick={() => eliminar(p.codigo_menu, p.codigo_perfil)}
+                                                    style={{ background: '#fee2e2', border: 'none', color: '#ef4444', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>
+                                                    🗑️ Eliminar
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}

@@ -2,9 +2,10 @@
 import { useEffect, useState } from 'react';
 import AdminSidebar from '@/components/AdminSidebar';
 import useAdminAuth from '@/lib/useAdminAuth';
+import SinPermiso from '@/components/SinPermiso';
 
 export default function SolicitudesAdminPage() {
-    const { nombre, listo } = useAdminAuth();
+    const { nombre, listo, acceso, puedeCrear, puedeActualizar, puedeEliminar } = useAdminAuth();
     const [solicitudes, setSolicitudes] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [mensaje, setMensaje] = useState('');
@@ -49,6 +50,14 @@ export default function SolicitudesAdminPage() {
     }
 
     if (!listo) return null;
+    if (!acceso) return (
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <AdminSidebar />
+        <main style={{ marginLeft: '240px', flex: 1, background: '#f8fafc' }}>
+            <SinPermiso />
+        </main>
+    </div>
+);
 
     return (
         <div suppressHydrationWarning style={{ display: 'flex', minHeight: '100vh', fontFamily: 'sans-serif' }}>
@@ -96,16 +105,20 @@ export default function SolicitudesAdminPage() {
                                     </span>
                                 </div>
                                 <div style={{ display: 'flex', gap: '8px', flexDirection: 'column' }}>
-                                    <button
-                                        onClick={() => procesarSolicitud(u.id_user, 'aprobar')}
-                                        style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#22c55e', color: 'white', cursor: 'pointer', fontWeight: 600 }}>
-                                        ✅ Aprobar
-                                    </button>
-                                    <button
-                                        onClick={() => setUsuarioSeleccionado(u.id_user)}
-                                        style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: 600 }}>
-                                        ❌ Rechazar
-                                    </button>
+                                    {puedeActualizar && (
+                                        <button
+                                            onClick={() => procesarSolicitud(u.id_user, 'aprobar')}
+                                            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#22c55e', color: 'white', cursor: 'pointer', fontWeight: 600 }}>
+                                            ✅ Aprobar
+                                        </button>
+                                    )}
+                                    {puedeEliminar && (
+                                        <button
+                                            onClick={() => setUsuarioSeleccionado(u.id_user)}
+                                            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: 600 }}>
+                                            ❌ Rechazar
+                                        </button>
+                                    )}
                                 </div>
                             </div>
 

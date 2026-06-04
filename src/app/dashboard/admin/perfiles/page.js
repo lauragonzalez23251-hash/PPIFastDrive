@@ -2,9 +2,10 @@
 import { useState, useEffect } from 'react';
 import AdminSidebar from '@/components/AdminSidebar';
 import useAdminAuth from '@/lib/useAdminAuth';
+import SinPermiso from '@/components/SinPermiso';
 
 export default function PerfilesAdminPage() {
-    const { nombre, listo } = useAdminAuth();
+    const { nombre, listo, acceso, puedeCrear, puedeActualizar, puedeEliminar } = useAdminAuth();
     const [lista, setLista] = useState([]);
     const [roles, setRoles] = useState([]);
     const [cargando, setCargando] = useState(true);
@@ -52,6 +53,14 @@ export default function PerfilesAdminPage() {
     }
 
     if (!listo) return null;
+    if (!acceso) return (
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <AdminSidebar />
+        <main style={{ marginLeft: '240px', flex: 1, background: '#f8fafc' }}>
+            <SinPermiso />
+        </main>
+    </div>
+);
 
     return (
         <div suppressHydrationWarning style={{ display: 'flex', minHeight: '100vh', fontFamily: 'sans-serif' }}>
@@ -64,10 +73,12 @@ export default function PerfilesAdminPage() {
                         <h2 style={{ color: '#1e293b', margin: 0 }}>Perfiles</h2>
                         <p style={{ color: '#64748b', margin: '4px 0 0' }}>Subcategorías de roles del sistema</p>
                     </div>
-                    <button onClick={() => { setEditandoId(null); setForm({ nombre_perfil: '', id_rol: '' }); setModalAbierto(true); }}
-                        style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
-                        + Nuevo Perfil
-                    </button>
+                    {puedeCrear && (
+                        <button onClick={() => { setEditandoId(null); setForm({ nombre_perfil: '', id_rol: '' }); setModalAbierto(true); }}
+                            style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                            + Nuevo Perfil
+                        </button>
+                    )}
                 </div>
 
                 {cargando ? <p>Cargando perfiles...</p> : (
@@ -92,14 +103,18 @@ export default function PerfilesAdminPage() {
                                             </span>
                                         </td>
                                         <td style={{ padding: '12px 16px', textAlign: 'center' }}>
+                                                {puedeActualizar && (
                                             <button onClick={() => { setEditandoId(item.codigo_perfil); setForm({ nombre_perfil: item.nombre_perfil, id_rol: item.rol?.id_rol || '' }); setModalAbierto(true); }}
                                                 style={{ background: '#e0e7ff', border: 'none', color: '#4f46e5', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', marginRight: '8px' }}>
                                                 ✏️ Editar
                                             </button>
+                                                )}
+                                                {puedeEliminar && (     
                                             <button onClick={() => eliminar(item.codigo_perfil)}
                                                 style={{ background: '#fee2e2', border: 'none', color: '#ef4444', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>
                                                 🗑️ Eliminar
                                             </button>
+                                            )}      
                                         </td>
                                     </tr>
                                 ))}

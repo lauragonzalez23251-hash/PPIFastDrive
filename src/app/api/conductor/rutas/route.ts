@@ -29,7 +29,6 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-            console.log("📦 Body recibido:", body); 
         const ds = await getDataSource();
         const rutaRepo      = ds.getRepository(RutaConductor);
         const estadoRepo    = ds.getRepository(Estado);
@@ -52,27 +51,29 @@ export async function POST(request: Request) {
         if (!universidad) return NextResponse.json({ error: "Universidad no encontrada" }, { status: 404 });
 
         const nuevaRuta = rutaRepo.create({
-            hora_salida_rc:             new Date(`1970-01-01T${body.horaSalida}:00`),
-            hora_estipulada_llegada_rc: body.horaLlegada ? new Date(`1970-01-01T${body.horaLlegada}:00`) : undefined,
-            tarifa_rc:                  Number(body.tarifa),
-            punto_origen_latitud_rc:    body.origenLat,
-            punto_origen_longitud_rc:   body.origenLng,
-            punto_destino_latitud_rc:   body.destinoLat,
-            punto_destino_longitud_rc:  body.destinoLng,
-            dias_semana: body.diasSemana || null,
-            origen_nombre: body.origenNombre || null,
+            hora_salida_rc:           new Date(`1970-01-01T${body.horaSalida}:00.000Z`),
+            tarifa_rc:                Number(body.tarifa),
+            punto_origen_latitud_rc:  body.origenLat,
+            punto_origen_longitud_rc: body.origenLng,
+            punto_destino_latitud_rc: body.destinoLat,
+            punto_destino_longitud_rc: body.destinoLng,
+            dias_semana:    body.diasSemana   || null,
+            origen_nombre:  body.origenNombre || null,
             destino_nombre: body.destinoNombre || null,
             conductor,
-        universidad,
+            universidad,
             estado: estadoInactivo,
-
         });
 
         const rutaGuardada = await rutaRepo.save(nuevaRuta);
+        await ds.query(
+                `UPDATE RUTA_CONDUCTOR SET HORA_SALIDA_RC = TO_DATE('1970-01-01 ' || :1, 'YYYY-MM-DD HH24:MI') WHERE ID_RC = :2`,
+                [body.horaSalida, rutaGuardada.id_rc]
+            );
         return NextResponse.json(rutaGuardada, { status: 201 });
 
     } catch (error: any) {
-        console.error("Error POST ruta:", error);
+        console.error(" Error POST ruta:", error);
         return NextResponse.json({ error: "Error al crear ruta" }, { status: 500 });
     }
 }

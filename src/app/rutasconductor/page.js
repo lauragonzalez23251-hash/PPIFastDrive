@@ -5,6 +5,8 @@ import useAuth from '@/lib/useAuth';
 import MapaPicker from '@/components/MapaPicker';
 import './conductores.css';
 import { useRouter } from 'next/navigation';
+import usePermisos from '@/lib/usePermisos';
+import SinPermiso from '@/components/SinPermiso';
 
 
 function formatHora(h) {
@@ -24,6 +26,10 @@ function formatHora(h) {
 
 export default function ConductoresPage() {
   const { nombre, idRol, listo, cerrarSesion } = useAuth([2, 4]);
+  const { puedeLeer, puedeCrear, puedeEliminar, cargando } = usePermisos();
+  console.log('puedeLeer:', puedeLeer, 'puedeCrear:', puedeCrear, 'cargandoPermisos:', cargando); 
+  const router = useRouter();
+
   const [trips, setTrips] = useState([]);
   const [universidades, setUniversidades] = useState([]);
   const [toast, setToast] = useState('');
@@ -40,11 +46,13 @@ export default function ConductoresPage() {
   const [origenNombre, setOrigenNombre] = useState('');
   const [destinoNombre, setDestinoNombre] = useState('');
   const [diaSemana, setDiaSemana] = useState('');
-  const router = useRouter();
+  
 
   useEffect(() => {
-    if (listo) { cargarRutas(); cargarUniversidades(); }
-  }, [listo]);
+    if (listo) {
+        Promise.all([cargarRutas(), cargarUniversidades()]);
+    }
+}, [listo]);
 
   async function cargarUniversidades() {
     try {
@@ -86,15 +94,15 @@ export default function ConductoresPage() {
 
   async function publicarViaje() {
     if (!origenLat || !destinoLat) {
-      showToast('⚠️ Marca el origen y destino en el mapa');
+      showToast(' Marca el origen y destino en el mapa');
       return;
     }
     if (!nitUni) {
-      showToast('⚠️ Al menos uno de los puntos debe ser una universidad');
+      showToast('Al menos uno de los puntos debe ser una universidad');
       return;
     }
     if (!hora || !aporte) {
-      showToast('⚠️ Completa hora y aporte');
+      showToast(' Completa hora y aporte');
       return;
     }
     try {
@@ -112,31 +120,17 @@ export default function ConductoresPage() {
       });
       const data = await res.json();
       if (res.ok) { resetForm(); cargarRutas(); showToast('✅ Ruta guardada en Oracle'); }
-      else showToast(`❌ ${data.error}`);
-    } catch { showToast('❌ Error de conexión'); }
+      else showToast(` ${data.error}`);
+    } catch { showToast(' Error de conexión'); }
   }
 
   async function eliminarViaje(id) {
     try {
       const res = await fetch(`/api/conductor/rutas/${id}`, { method: 'DELETE' });
       if (res.ok) { cargarRutas(); showToast('🗑️ Ruta eliminada'); }
-      else showToast('❌ Error al eliminar');
-    } catch { showToast('❌ Error de conexión'); }
+      else showToast(' Error al eliminar');
+    } catch { showToast(' Error de conexión'); }
   }
-
-  async function toggleRuta(id, estadoActual) {
-    const accion = estadoActual === 'Activa' ? 'desactivar' : 'activar';
-    try {
-      const res = await fetch(`/api/conductor/rutas/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ accion })
-      });
-      if (res.ok) cargarRutas();
-      else showToast('❌ Error al actualizar estado');
-    } catch { showToast('❌ Error de conexión'); }
-  }
-
 
   async function toggleRuta(id, estadoActual) {
       const accion = estadoActual === 'Activa' ? 'desactivar' : 'activar';
@@ -154,8 +148,8 @@ export default function ConductoresPage() {
                   router.push(`/rutasconductor/viaje?viajeId=${data.viajeId}`);
               }
           }
-          else showToast('❌ Error al actualizar estado');
-      } catch { showToast('❌ Error de conexión'); }
+          else showToast(' Error al actualizar estado');
+      } catch { showToast(' Error de conexión'); }
   }
 
   function handleAporteBlur() {
@@ -163,7 +157,15 @@ export default function ConductoresPage() {
     if (v) setAporte('$' + parseInt(v).toLocaleString('es-CO') + ' COP');
   }
 
-  if (!listo) return null;
+   if (!listo || cargando) return null;
+
+    // Si no puede leer → mostrar bloqueo
+    if (!puedeLeer) return (
+        <div>
+            <UserNavbar nombre={nombre} idRol={idRol} onCerrarSesion={cerrarSesion} />
+            <SinPermiso />
+        </div>
+    );
 
   return (
     <div className="conductores-page">
@@ -219,11 +221,14 @@ export default function ConductoresPage() {
                 ))}
               </select>
             </div>
-
+            {/* Condicionar si puede crear viajes */}
+            {puedeCrear && (
             <button className="btn-primary btn-publish" onClick={publicarViaje}>
               ✓ Publicar Viaje
             </button>
+            )}
           </div>
+
 
           {/* ← Columna derecha: Mis Viajes */}
           <div className="card trips-card">
@@ -283,11 +288,14 @@ export default function ConductoresPage() {
                               }}>
                               {t.estado?.nombre_estado === 'Activa' ? '⏸ Desactivar' : '▶ Activar Viaje'}
                           </button>
+                          {/* Condicionar si puede eliminar viajes */}
+                          {puedeEliminar && (
                           <button
                               onClick={() => eliminarViaje(t.id_rc)}
                               style={{ background: '#fee2e2', color: '#ef4444', border: 'none', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
                               🗑️ Eliminar Viaje
                           </button>
+                          )}
                       </div>
                     </div>
                   </div>
@@ -297,10 +305,22 @@ export default function ConductoresPage() {
           </div>
 
         </div>
+             {puedeCrear && (
+                    <button onClick={publicarViaje}>✓ Publicar Viaje</button>
+                )}
+
+                {puedeEliminar && (
+                    <button onClick={() => eliminarViaje(t.id_rc)}>🗑️ Eliminar</button>
+                )}
       </main>
       <div className={`toast ${toastVisible ? 'show' : ''}`}>
         <span>{toast}</span>
       </div>
     </div>
+  
+
+
+
+
   );
 }

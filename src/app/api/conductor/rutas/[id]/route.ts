@@ -4,6 +4,8 @@ import { RutaConductor } from "@/entities/RutaConductor";
 import { Viaje } from "@/entities/Viaje";
 import { Vehiculo } from "@/entities/Vehiculo";
 import { Estado } from "@/entities/Estado";
+import { Parada } from "@/entities/Parada";
+import { Reserva } from "@/entities/Reserva";
 
 export async function PATCH(
     request: Request,
@@ -107,13 +109,36 @@ export async function DELETE(
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id } = await params;  // ← await aquí
+        const { id } = await params;
         const ds = await getDataSource();
-        const rutaRepo = ds.getRepository(RutaConductor);
+        const rutaRepo   = ds.getRepository(RutaConductor);
+        const paradaRepo = ds.getRepository(Parada);
+        const viajeRepo  = ds.getRepository(Viaje);
+        const reservaRepo = ds.getRepository(Reserva);
 
         const ruta = await rutaRepo.findOne({ where: { id_rc: Number(id) } });
         if (!ruta) return NextResponse.json({ error: "Ruta no encontrada" }, { status: 404 });
 
+        // 1. Buscar viajes de esta ruta
+        const viajes = await viajeRepo.find({
+            where: { rutaConductor: { id_rc: Number(id) } }
+        });
+
+        // 2. Borrar reservas de cada viaje
+        for (const viaje of viajes) {
+            await reservaRepo.delete({ viaje: { id_vj: viaje.id_vj } });
+        }
+
+        // 3. Borrar viajes
+        await viajeRepo.delete({ rutaConductor: { id_rc: Number(id) } });
+
+        // 4. Borrar paradas
+        await ds.query(
+            `DELETE FROM PARADA WHERE ID_RC = :1`,
+            [Number(id)]
+        );
+
+        // 5. Borrar ruta
         await rutaRepo.remove(ruta);
         return NextResponse.json({ message: "Ruta eliminada" }, { status: 200 });
 

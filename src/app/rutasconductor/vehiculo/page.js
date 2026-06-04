@@ -3,9 +3,12 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import UserNavbar from '@/components/UserNavbar';
 import useAuth from '@/lib/useAuth';
+import usePermisos from '@/lib/usePermisos';       // ← NUEVO
+import SinPermiso from '@/components/SinPermiso';  // ← NUEVO
 
 export default function VehiculoPage() {
     const { nombre, idRol, listo, cerrarSesion } = useAuth([2, 4]);
+    const { puedeLeer, puedeActualizar, cargando: cargandoPermisos } = usePermisos(); // ← NUEVO
     const router = useRouter();
     const [vehiculo, setVehiculo] = useState(null);
     const [cargando, setCargando] = useState(true);
@@ -69,7 +72,16 @@ export default function VehiculoPage() {
         finally { setLoading(false); }
     }
 
-    if (!listo) return null;
+    // ← GUARDS en orden correcto
+    if (!listo || cargandoPermisos) return null;
+
+    // ← BLOQUEO si no puede leer
+    if (!puedeLeer) return (
+        <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+            <UserNavbar nombre={nombre} idRol={idRol} onCerrarSesion={cerrarSesion} />
+            <SinPermiso />
+        </div>
+    );
 
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
@@ -114,7 +126,8 @@ export default function VehiculoPage() {
                                     </span>
                                 </div>
                             </div>
-                            {!editando && (
+                            {/* ← Solo muestra botón Editar si puede actualizar */}
+                            {!editando && puedeActualizar && (
                                 <button onClick={() => setEditando(true)}
                                     style={{ background: '#e0e7ff', color: '#4f46e5', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
                                     ✏️ Editar
@@ -140,42 +153,43 @@ export default function VehiculoPage() {
                                 ))}
                             </div>
                         ) : (
-                            <form onSubmit={guardarCambios}>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-                                    {[
-                                        { label: 'Marca',         key: 'marca_veh',         type: 'text',   placeholder: 'Ej: Renault' },
-                                        { label: 'Modelo',        key: 'modelo_veh',        type: 'text',   placeholder: 'Ej: Sandero' },
-                                        { label: 'Color',         key: 'color_veh',         type: 'text',   placeholder: 'Ej: Gris' },
-                                        { label: 'Año',           key: 'anno_creacion_veh', type: 'number', placeholder: 'Ej: 2020' },
-                                        { label: 'SOAT',          key: 'numero_soat_veh',   type: 'text',   placeholder: 'Número SOAT' },
-                                        { label: 'Cupos',         key: 'total_cupos_veh',   type: 'number', placeholder: 'Ej: 4' },
-                                    ].map(field => (
-                                        <div key={field.key}>
-                                            <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>
-                                                {field.label}
-                                            </label>
-                                            <input
-                                                type={field.type}
-                                                value={form[field.key]}
-                                                onChange={e => setForm({ ...form, [field.key]: e.target.value })}
-                                                placeholder={field.placeholder}
-                                                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', boxSizing: 'border-box', fontSize: '0.9rem' }}
-                                            />
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                                    <button type="button" onClick={() => { setEditando(false); setMsg(''); }}
-                                        style={{ padding: '10px 16px', background: '#e2e8f0', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-                                        Cancelar
-                                    </button>
-                                    <button type="submit" disabled={loading}
-                                        style={{ padding: '10px 16px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-                                        {loading ? 'Guardando...' : 'Guardar Cambios'}
-                                    </button>
-                                </div>
-                            </form>
+                            // ← Solo muestra formulario si puede actualizar
+                            puedeActualizar ? (
+                                <form onSubmit={guardarCambios}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                                        {[
+                                            { label: 'Marca',  key: 'marca_veh',         type: 'text',   placeholder: 'Ej: Renault' },
+                                            { label: 'Modelo', key: 'modelo_veh',        type: 'text',   placeholder: 'Ej: Sandero' },
+                                            { label: 'Color',  key: 'color_veh',         type: 'text',   placeholder: 'Ej: Gris' },
+                                            { label: 'Año',    key: 'anno_creacion_veh', type: 'number', placeholder: 'Ej: 2020' },
+                                            { label: 'SOAT',   key: 'numero_soat_veh',   type: 'text',   placeholder: 'Número SOAT' },
+                                            { label: 'Cupos',  key: 'total_cupos_veh',   type: 'number', placeholder: 'Ej: 4' },
+                                        ].map(field => (
+                                            <div key={field.key}>
+                                                <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>
+                                                    {field.label}
+                                                </label>
+                                                <input type={field.type} value={form[field.key]}
+                                                    onChange={e => setForm({ ...form, [field.key]: e.target.value })}
+                                                    placeholder={field.placeholder}
+                                                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', boxSizing: 'border-box', fontSize: '0.9rem' }} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                                        <button type="button" onClick={() => { setEditando(false); setMsg(''); }}
+                                            style={{ padding: '10px 16px', background: '#e2e8f0', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                                            Cancelar
+                                        </button>
+                                        <button type="submit" disabled={loading}
+                                            style={{ padding: '10px 16px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                                            {loading ? 'Guardando...' : 'Guardar Cambios'}
+                                        </button>
+                                    </div>
+                                </form>
+                            ) : (
+                                <p style={{ color: '#94a3b8', fontSize: '0.85rem' }}>No tienes permiso para editar el vehículo.</p>
+                            )
                         )}
                     </div>
                 )}

@@ -2,9 +2,10 @@
 import { useState, useEffect } from "react";
 import AdminSidebar from '@/components/AdminSidebar';
 import useAdminAuth from '@/lib/useAdminAuth';
+import SinPermiso from '@/components/SinPermiso';
 
 export default function RolesAdminPage() {
-  const { nombre, listo } = useAdminAuth();
+  const { nombre, listo, acceso, puedeCrear, puedeActualizar, puedeEliminar } = useAdminAuth();
   const [roles, setRoles] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -82,6 +83,14 @@ export default function RolesAdminPage() {
   };
 
   if (!listo) return null;
+  if (!acceso) return (
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <AdminSidebar />
+        <main style={{ marginLeft: '240px', flex: 1, background: '#f8fafc' }}>
+            <SinPermiso />
+        </main>
+    </div>
+);
 
   return (
   <div suppressHydrationWarning style={{ display: 'flex', minHeight: '100vh', fontFamily: 'sans-serif' }}>
@@ -95,12 +104,14 @@ export default function RolesAdminPage() {
                     <h2 style={{ color: "#2c3e50", margin: 0 }}>Gestión de Roles</h2>
                     <p style={{ color: "#7f8c8d", margin: "5px 0 0 0" }}>Configura los roles principales del sistema</p>
                   </div>
-                  <button 
-                    onClick={() => abrirModal()}
-                    style={{ backgroundColor: "#2ecc71", color: "white", border: "none", padding: "10px 15px", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}
-                  >
-                    + Nuevo Rol
-                  </button>
+                  {puedeCrear && (
+                    <button 
+                      onClick={() => abrirModal()}
+                      style={{ backgroundColor: "#2ecc71", color: "white", border: "none", padding: "10px 15px", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}
+                    >
+                      + Nuevo Rol
+                    </button>
+                  )}
                 </div>
 
                 {/* TABLA DE DATOS */}
@@ -121,18 +132,22 @@ export default function RolesAdminPage() {
                           <td style={{ padding: "12px" }}>{rol.id_rol}</td>
                           <td style={{ padding: "12px", fontWeight: "500" }}>{rol.nombre_rol}</td>
                           <td style={{ padding: "12px", textAlign: "center" }}>
-                            <button 
-                              onClick={() => abrirModal(rol)}
-                              style={{ backgroundColor: "#3498db", color: "white", border: "none", padding: "5px 10px", borderRadius: "3px", marginRight: "8px", cursor: "pointer" }}
-                            >
-                              Editar
-                            </button>
-                            <button 
-                              onClick={() => manejarEliminar(rol.id_rol)}
-                              style={{ backgroundColor: "#e74c3c", color: "white", border: "none", padding: "5px 10px", borderRadius: "3px", cursor: "pointer" }}
-                            >
+                            {puedeActualizar && (
+                              <button 
+                                onClick={() => abrirModal(rol)}
+                                style={{ backgroundColor: "#3498db", color: "white", border: "none", padding: "5px 10px", borderRadius: "3px", marginRight: "8px", cursor: "pointer" }}
+                              >
+                                Editar
+                              </button>
+                            )}
+                            {puedeEliminar && (
+                              <button 
+                                onClick={() => manejarEliminar(rol.id_rol)}
+                                style={{ backgroundColor: "#e74c3c", color: "white", border: "none", padding: "5px 10px", borderRadius: "3px", cursor: "pointer" }}
+                              >
                               Eliminar
                             </button>
+                            )}
                           </td>
                         </tr>
                       ))}

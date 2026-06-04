@@ -3,10 +3,13 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import UserNavbar from '@/components/UserNavbar';
 import useAuth from '@/lib/useAuth';
+import usePermisos from '@/lib/usePermisos';       // ← NUEVO
+import SinPermiso from '@/components/SinPermiso';  // ← NUEVO
 import Estrellas from '@/components/Estrellas';
 
 function CalificacionesPasajeroContent() {
     const { nombre, idRol, listo, cerrarSesion } = useAuth([3, 4]);
+    const { puedeLeer, puedeCrear, cargando: cargandoPermisos } = usePermisos(); // ← NUEVO
     const router = useRouter();
 
     const [viajesFinalizados, setViajesFinalizados] = useState([]);
@@ -75,7 +78,16 @@ function CalificacionesPasajeroContent() {
         } catch { showToast('❌ Error de conexión'); }
     }
 
-    if (!listo) return null;
+    // ← GUARDS en orden correcto
+    if (!listo || cargandoPermisos) return null;
+
+    // ← BLOQUEO si no puede leer
+    if (!puedeLeer) return (
+        <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+            <UserNavbar nombre={nombre} idRol={idRol} onCerrarSesion={cerrarSesion} />
+            <SinPermiso />
+        </div>
+    );
 
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
@@ -121,10 +133,13 @@ function CalificacionesPasajeroContent() {
                                         ✅ Calificado
                                     </span>
                                 ) : (
-                                    <button onClick={() => abrirModal(v)}
-                                        style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
-                                        ⭐ Calificar
-                                    </button>
+                                    // ← Solo muestra botón calificar si puede crear
+                                    puedeCrear && (
+                                        <button onClick={() => abrirModal(v)}
+                                            style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
+                                            ⭐ Calificar
+                                        </button>
+                                    )
                                 )}
                             </div>
                         ))}
@@ -132,8 +147,8 @@ function CalificacionesPasajeroContent() {
                 )}
             </div>
 
-            {/* Modal */}
-            {modalAbierto && viajeSeleccionado && (
+            {/* Modal - solo si puede crear */}
+            {modalAbierto && viajeSeleccionado && puedeCrear && (
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
                     <div style={{ background: 'white', padding: '28px', borderRadius: '12px', width: '420px' }}>
                         <h3 style={{ margin: '0 0 4px', color: '#1e293b' }}>Calificar a {viajeSeleccionado.conductor_nombre}</h3>

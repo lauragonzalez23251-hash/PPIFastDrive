@@ -35,6 +35,15 @@ const options: DataSourceOptions & SeederOptions = {
     sid: "xe",
     synchronize: false,
     logging: false,
+
+     extra: {
+        poolMin: 2,        // conexiones mínimas siempre abiertas
+        poolMax: 10,       // máximo de conexiones simultáneas
+        poolIncrement: 1,  // cuántas abre cuando necesita más
+        poolTimeout: 60,   // segundos antes de cerrar una conexión inactiva
+    },
+
+
     entities: [
         CalificacionConductor,
         CalificacionEstudiante,

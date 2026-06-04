@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect } from 'react';
 import UserNavbar from '@/components/UserNavbar';
 import useAuth from '@/lib/useAuth';
+import usePermisos from '@/lib/usePermisos';       // ← NUEVO
+import SinPermiso from '@/components/SinPermiso';  // ← NUEVO
 
 function formatHora(h) {
     if (!h) return '';
@@ -30,6 +32,7 @@ function Estrellas({ promedio, total }) {
 
 export default function PasajerosPage() {
     const { nombre, idRol, listo, cerrarSesion } = useAuth([3, 4]);
+    const { puedeLeer, puedeCrear, cargando: cargandoPermisos } = usePermisos(); // ← NUEVO
     const toastTimer = useRef(null);
 
     const [viajes, setViajes] = useState([]);
@@ -37,12 +40,10 @@ export default function PasajerosPage() {
     const [cargando, setCargando] = useState(true);
     const [filter, setFilter] = useState('todos');
     const [busqueda, setBusqueda] = useState('');
-
     const [modalOpen, setModalOpen] = useState(false);
     const [activeTrip, setActiveTrip] = useState(null);
     const [paradaSeleccionada, setParadaSeleccionada] = useState('');
     const [reservando, setReservando] = useState(false);
-
     const [misReservas, setMisReservas] = useState([]);
     const [toast, setToast] = useState('');
     const [toastVisible, setToastVisible] = useState(false);
@@ -159,7 +160,16 @@ export default function PasajerosPage() {
         finally { setReservando(false); }
     }
 
-    if (!listo) return null;
+    // ← GUARDS en orden correcto
+    if (!listo || cargandoPermisos) return null;
+
+    // ← BLOQUEO si no puede leer
+    if (!puedeLeer) return (
+        <div style={{ background: '#eef0f7', minHeight: '100vh' }}>
+            <UserNavbar nombre={nombre} idRol={idRol} onCerrarSesion={cerrarSesion} />
+            <SinPermiso />
+        </div>
+    );
 
     return (
         <div style={{ background: '#eef0f7', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -173,13 +183,10 @@ export default function PasajerosPage() {
                         <h2 style={{ margin: '0 0 16px', color: '#1e293b', fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <i className="bi bi-geo-alt-fill" style={{ color: '#4f46e5' }}></i> Buscar Viaje
                         </h2>
-
-                        <input
-                            type="text" value={busqueda} onChange={handleBusqueda}
+                        <input type="text" value={busqueda} onChange={handleBusqueda}
                             placeholder="🔍 Busca por origen, destino o conductor..."
                             style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: '1px solid #e2e8f0', fontSize: '0.85rem', boxSizing: 'border-box', marginBottom: '16px' }}
                         />
-
                         <div style={{ marginBottom: '8px', fontSize: '0.8rem', fontWeight: 600, color: '#64748b' }}>Filtros</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                             {[
@@ -200,7 +207,6 @@ export default function PasajerosPage() {
                                 </button>
                             ))}
                         </div>
-
                         <div style={{ marginTop: '16px', padding: '12px', background: '#f8fafc', borderRadius: '10px', fontSize: '0.8rem', color: '#64748b', textAlign: 'center' }}>
                             {cargando ? 'Cargando...' : `${visibleTrips.length} viaje${visibleTrips.length !== 1 ? 's' : ''} disponible${visibleTrips.length !== 1 ? 's' : ''}`}
                         </div>
@@ -218,7 +224,6 @@ export default function PasajerosPage() {
                                     {visibleTrips.length} viaje{visibleTrips.length !== 1 ? 's' : ''}
                                 </span>
                             </div>
-
                             <div style={{ padding: '16px' }}>
                                 {cargando ? (
                                     <p style={{ color: '#64748b', textAlign: 'center', padding: '40px' }}>Cargando viajes...</p>
@@ -243,7 +248,6 @@ export default function PasajerosPage() {
                                                     border: `1px solid ${reservado ? '#86efac' : '#e2e8f0'}`,
                                                     boxShadow: '0 1px 3px rgba(0,0,0,0.06)', transition: 'all 0.2s'
                                                 }}>
-                                                    {/* Ruta */}
                                                     <div style={{ marginBottom: '12px' }}>
                                                         <div style={{ fontWeight: 700, color: '#1e293b', fontSize: '0.95rem' }}>
                                                             {v.origen_nombre || 'Origen'} → {v.destino_nombre}
@@ -252,8 +256,6 @@ export default function PasajerosPage() {
                                                             🎓 {v.universidad}
                                                         </div>
                                                     </div>
-
-                                                    {/* Meta */}
                                                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '12px' }}>
                                                         <span style={{ background: '#f0f9ff', color: '#0369a1', padding: '3px 10px', borderRadius: '99px', fontSize: '0.78rem', fontWeight: 600 }}>
                                                             🕐 {formatHora(v.hora_salida)}
@@ -265,8 +267,6 @@ export default function PasajerosPage() {
                                                             💺 {v.cupos_totales} cupos
                                                         </span>
                                                     </div>
-
-                                                    {/* Conductor */}
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px', padding: '10px', background: '#f8fafc', borderRadius: '10px' }}>
                                                         <div style={{ width: '38px', height: '38px', borderRadius: '50%', overflow: 'hidden', background: '#e0e7ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                                             {v.conductor?.foto
@@ -279,8 +279,6 @@ export default function PasajerosPage() {
                                                             <Estrellas promedio={v.conductor?.promedio} total={v.conductor?.totalCal} />
                                                         </div>
                                                     </div>
-
-                                                    {/* Paradas */}
                                                     {v.paradas?.length > 0 && (
                                                         <div style={{ marginBottom: '12px', fontSize: '0.78rem', color: '#64748b' }}>
                                                             📍 {v.paradas.length} parada{v.paradas.length !== 1 ? 's' : ''}:
@@ -292,17 +290,22 @@ export default function PasajerosPage() {
                                                             {v.paradas.length > 2 && <span style={{ marginLeft: '4px' }}>+{v.paradas.length - 2} más</span>}
                                                         </div>
                                                     )}
-
-                                                    {/* Botón */}
-                                                    <button onClick={() => !reservado && openModal(v)} disabled={reservado}
-                                                        style={{
-                                                            width: '100%', padding: '10px', borderRadius: '10px', border: 'none',
-                                                            cursor: reservado ? 'default' : 'pointer', fontWeight: 700, fontSize: '0.85rem',
-                                                            background: reservado ? '#dcfce7' : '#4f46e5',
-                                                            color: reservado ? '#16a34a' : 'white',
-                                                        }}>
-                                                        {reservado ? '✅ Reserva Solicitada' : '🎫 Reservar Cupo'}
-                                                    </button>
+                                                    {/* ← Botón reservar condicionado con puedeCrear */}
+                                                    {puedeCrear ? (
+                                                        <button onClick={() => !reservado && openModal(v)} disabled={reservado}
+                                                            style={{
+                                                                width: '100%', padding: '10px', borderRadius: '10px', border: 'none',
+                                                                cursor: reservado ? 'default' : 'pointer', fontWeight: 700, fontSize: '0.85rem',
+                                                                background: reservado ? '#dcfce7' : '#4f46e5',
+                                                                color: reservado ? '#16a34a' : 'white',
+                                                            }}>
+                                                            {reservado ? '✅ Reserva Solicitada' : '🎫 Reservar Cupo'}
+                                                        </button>
+                                                    ) : (
+                                                        <div style={{ width: '100%', padding: '10px', borderRadius: '10px', background: '#f1f5f9', textAlign: 'center', fontSize: '0.85rem', color: '#94a3b8' }}>
+                                                            🔒 Sin permiso para reservar
+                                                        </div>
+                                                    )}
                                                 </div>
                                             );
                                         })}
@@ -311,12 +314,11 @@ export default function PasajerosPage() {
                             </div>
                         </div>
                     </div>
-
                 </div>
             </main>
 
-            {/* Modal reservar */}
-            {modalOpen && activeTrip && (
+            {/* Modal reservar - solo si puede crear */}
+            {modalOpen && activeTrip && puedeCrear && (
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}
                     onClick={e => { if (e.target === e.currentTarget) setModalOpen(false); }}>
                     <div style={{ background: 'white', padding: '28px', borderRadius: '16px', width: '460px', maxHeight: '90vh', overflowY: 'auto' }}>
@@ -324,7 +326,6 @@ export default function PasajerosPage() {
                         <p style={{ color: '#64748b', fontSize: '0.85rem', margin: '0 0 20px' }}>
                             {activeTrip.origen_nombre} → {activeTrip.destino_nombre}
                         </p>
-
                         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
                             <span style={{ background: '#f0f9ff', color: '#0369a1', padding: '4px 12px', borderRadius: '99px', fontSize: '0.8rem', fontWeight: 600 }}>
                                 🕐 {formatHora(activeTrip.hora_salida)}
@@ -333,8 +334,6 @@ export default function PasajerosPage() {
                                 💵 ${Number(activeTrip.tarifa).toLocaleString('es-CO')} COP
                             </span>
                         </div>
-
-                        {/* Selector de parada */}
                         <div style={{ marginBottom: '20px' }}>
                             <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '0.85rem', color: '#1e293b' }}>
                                 📍 Selecciona tu parada de recogida
@@ -365,7 +364,6 @@ export default function PasajerosPage() {
                                 </div>
                             )}
                         </div>
-
                         <div style={{ display: 'flex', gap: '10px' }}>
                             <button onClick={() => setModalOpen(false)}
                                 style={{ flex: 1, padding: '12px', background: '#e2e8f0', border: 'none', borderRadius: '10px', cursor: 'pointer', fontWeight: 600 }}>

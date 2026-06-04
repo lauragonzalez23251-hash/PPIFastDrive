@@ -3,9 +3,12 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import UserNavbar from '@/components/UserNavbar';
 import useAuth from '@/lib/useAuth';
+import usePermisos from '@/lib/usePermisos';       // ← NUEVO
+import SinPermiso from '@/components/SinPermiso';  // ← NUEVO
 
 function ParadasContent() {
     const { nombre, idRol, listo, cerrarSesion } = useAuth([2, 4]);
+    const { puedeLeer, puedeCrear, puedeEliminar, cargando: cargandoPermisos } = usePermisos(); // ← NUEVO
     const searchParams = useSearchParams();
     const router = useRouter();
     const idRuta = searchParams.get('rutaId');
@@ -57,7 +60,7 @@ function ParadasContent() {
     async function agregarParada(e) {
         e.preventDefault();
         if (!nombre_parada || !orden) {
-            showToast(' Nombre y orden son obligatorios');
+            showToast('⚠️ Nombre y orden son obligatorios');
             return;
         }
         try {
@@ -78,11 +81,11 @@ function ParadasContent() {
                 setModalAbierto(false);
                 resetForm();
                 cargarParadas();
-                showToast('Parada agregada');
+                showToast('✅ Parada agregada');
             } else {
-                showToast(`${data.error}`);
+                showToast(`❌ ${data.error}`);
             }
-        } catch { showToast(' Error de conexión'); }
+        } catch { showToast('❌ Error de conexión'); }
     }
 
     async function eliminarParada(id) {
@@ -90,8 +93,8 @@ function ParadasContent() {
         try {
             const res = await fetch(`/api/conductor/rutas/${idRuta}/paradas/${id}`, { method: 'DELETE' });
             if (res.ok) { cargarParadas(); }
-            else showToast('Error al eliminar');
-        } catch { showToast('Error de conexión'); }
+            else showToast('❌ Error al eliminar');
+        } catch { showToast('❌ Error de conexión'); }
     }
 
     function resetForm() {
@@ -116,7 +119,16 @@ function ParadasContent() {
         } catch { return h; }
     }
 
-    if (!listo) return null;
+    // ← GUARDS en orden correcto
+    if (!listo || cargandoPermisos) return null;
+
+    // ← BLOQUEO si no puede leer
+    if (!puedeLeer) return (
+        <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+            <UserNavbar nombre={nombre} idRol={idRol} onCerrarSesion={cerrarSesion} />
+            <SinPermiso />
+        </div>
+    );
 
     return (
         <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
@@ -134,10 +146,13 @@ function ParadasContent() {
                             Define los puntos de recogida para esta ruta
                         </p>
                     </div>
-                    <button onClick={() => setModalAbierto(true)}
-                        style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
-                        + Nueva Parada
-                    </button>
+                    {/* ← Solo muestra botón Nueva Parada si puede crear */}
+                    {puedeCrear && (
+                        <button onClick={() => setModalAbierto(true)}
+                            style={{ background: '#4f46e5', color: 'white', border: 'none', padding: '12px 24px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}>
+                            + Nueva Parada
+                        </button>
+                    )}
                 </div>
 
                 {cargando ? <p>Cargando paradas...</p> : paradas.length === 0 ? (
@@ -185,17 +200,21 @@ function ParadasContent() {
                                         </div>
                                     </div>
                                 </div>
-                                <button onClick={() => eliminarParada(p.id_pds)}
-                                    style={{ background: '#fee2e2', border: 'none', color: '#ef4444', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer' }}>
-                                    🗑️ Eliminar
-                                </button>
+                                {/* ← Solo muestra botón eliminar si puede eliminar */}
+                                {puedeEliminar && (
+                                    <button onClick={() => eliminarParada(p.id_pds)}
+                                        style={{ background: '#fee2e2', border: 'none', color: '#ef4444', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer' }}>
+                                        🗑️ Eliminar
+                                    </button>
+                                )}
                             </div>
                         ))}
                     </div>
                 )}
             </div>
 
-            {modalAbierto && (
+            {/* Modal - solo se abre si puede crear */}
+            {modalAbierto && puedeCrear && (
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
                     <div style={{ background: 'white', padding: '28px', borderRadius: '12px', width: '480px', maxHeight: '90vh', overflowY: 'auto' }}>
                         <h3 style={{ margin: '0 0 20px', color: '#1e293b' }}>Nueva Parada</h3>
@@ -209,7 +228,6 @@ function ParadasContent() {
                                     placeholder="Ej: Parque Berrío, Calle 50 con Av. El Palo"
                                     style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', boxSizing: 'border-box' }} />
                             </div>
-
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
                                 <div>
                                     <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', fontWeight: 600 }}>
@@ -229,7 +247,6 @@ function ParadasContent() {
                                         style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', boxSizing: 'border-box' }} />
                                 </div>
                             </div>
-
                             <div style={{ marginBottom: '12px' }}>
                                 <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', fontWeight: 600 }}>
                                     Costo adicional (COP)
@@ -242,7 +259,6 @@ function ParadasContent() {
                                     Costo extra si el estudiante quiere ser llevado hasta este punto
                                 </p>
                             </div>
-
                             <div style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <input type="checkbox" id="esUni" checked={esUniversidad}
                                     onChange={e => { setEsUniversidad(e.target.checked); setNitUniParada(''); }}
@@ -251,7 +267,6 @@ function ParadasContent() {
                                     🎓 Esta parada es una universidad
                                 </label>
                             </div>
-
                             {esUniversidad && (
                                 <div style={{ marginBottom: '16px' }}>
                                     <label style={{ display: 'block', marginBottom: '4px', fontSize: '0.85rem', fontWeight: 600 }}>
@@ -266,7 +281,6 @@ function ParadasContent() {
                                     </select>
                                 </div>
                             )}
-
                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                                 <button type="button" onClick={() => { setModalAbierto(false); resetForm(); }}
                                     style={{ padding: '10px 16px', background: '#e2e8f0', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>

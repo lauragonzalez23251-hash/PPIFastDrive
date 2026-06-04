@@ -2,9 +2,10 @@
 import { useState, useEffect } from "react";
 import AdminSidebar from '@/components/AdminSidebar';
 import useAdminAuth from '@/lib/useAdminAuth';
+import SinPermiso from '@/components/SinPermiso';
 
 export default function MenusAdminPage() {
-  const{nombre, listo} = useAdminAuth();
+  const { nombre, listo, acceso, puedeCrear, puedeActualizar, puedeEliminar } = useAdminAuth();
   const [menus, setMenus] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -92,6 +93,14 @@ export default function MenusAdminPage() {
   };
 
   if(!listo) return null; // O un spinner de carga
+  if (!acceso) return (
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <AdminSidebar />
+        <main style={{ marginLeft: '240px', flex: 1, background: '#f8fafc' }}>
+            <SinPermiso />
+        </main>
+    </div>
+);
   return (
     <div suppressHydrationWarning style={{ display: 'flex', minHeight: '100vh', fontFamily: 'sans-serif' }}>
       <AdminSidebar />
@@ -106,9 +115,11 @@ export default function MenusAdminPage() {
               <h2 style={{ color: "#2c3e50", margin: 0 }}>Menús de Navegación</h2>
               <p style={{ color: "#7f8c8d", margin: "5px 0 0 0" }}>Estructura las rutas y accesos dinámicos del sistema</p>
             </div>
-            <button onClick={() => abrirModal()} style={{ backgroundColor: "#2ecc71", color: "white", border: "none", padding: "10px 15px", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}>
-              + Nuevo Menú
-            </button>
+            {puedeCrear && (
+              <button onClick={() => abrirModal()} style={{ backgroundColor: "#2ecc71", color: "white", border: "none", padding: "10px 15px", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}>
+                + Nuevo Menú
+              </button>
+            )}
           </div>
 
           {cargando ? <p>Cargando enrutamiento...</p> : (
@@ -138,8 +149,12 @@ export default function MenusAdminPage() {
                       )}
                     </td>
                     <td style={{ padding: "12px", textAlign: "center" }}>
-                      <button onClick={() => abrirModal(m)} style={{ backgroundColor: "#3498db", color: "white", border: "none", padding: "5px 10px", borderRadius: "3px", marginRight: "8px", cursor: "pointer" }}>Editar</button>
-                      <button onClick={() => manejarEliminar(m.codigo_menu)} style={{ backgroundColor: "#e74c3c", color: "white", border: "none", padding: "5px 10px", borderRadius: "3px", cursor: "pointer" }}>Eliminar</button>
+                      {puedeActualizar && (
+                        <button onClick={() => abrirModal(m)} style={{ backgroundColor: "#3498db", color: "white", border: "none", padding: "5px 10px", borderRadius: "3px", marginRight: "8px", cursor: "pointer" }}>Editar</button>
+                      )}
+                      {puedeEliminar && (
+                        <button onClick={() => manejarEliminar(m.codigo_menu)} style={{ backgroundColor: "#e74c3c", color: "white", border: "none", padding: "5px 10px", borderRadius: "3px", cursor: "pointer" }}>Eliminar</button>
+                      )}
                     </td>
                   </tr>
                 ))}

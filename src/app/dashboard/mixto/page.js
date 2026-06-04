@@ -1,66 +1,123 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import UserNavbar from '@/components/UserNavbar';
-import useAuth from '@/lib/useAuth';
 
 export default function DashboardMixto() {
-    const { nombre, idRol, listo, cerrarSesion } = useAuth([4]);
-    const [vista, setVista] = useState('conductor');
     const router = useRouter();
+    const [nombre, setNombre] = useState('');
+    const [listo, setListo] = useState(false);
+
+    useEffect(() => {
+        const userId  = localStorage.getItem('userId');
+        const userRol = parseInt(localStorage.getItem('userRol'));
+        const userName = localStorage.getItem('userName');
+
+        // Si no está logueado
+        if (!userId) { router.push('/login'); return; }
+
+        // Si no es rol mixto
+        if (userRol !== 4) { router.push('/login'); return; }
+
+        // Si ya eligió modo redirigir directamente
+        const modoGuardado = localStorage.getItem('modoMixto');
+        if (modoGuardado === 'conductor') {
+            router.replace('/dashboard/conductor');
+            return;
+        } else if (modoGuardado === 'pasajero') {
+            router.replace('/dashboard/pasajero');
+            return;
+        }
+
+        // Si no ha elegido modo mostrar la pantalla de selección
+        setNombre(userName || 'Usuario');
+        setListo(true);
+    }, []);
+
+    function elegirModo(modo) {
+        localStorage.setItem('modoMixto', modo);
+        if (modo === 'conductor') {
+            router.push('/dashboard/conductor');
+        } else {
+            router.push('/dashboard/pasajero');
+        }
+    }
+
+    function cerrarSesion() {
+        localStorage.clear();
+        router.push('/login');
+    }
 
     if (!listo) return null;
 
     return (
-        <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
-            <UserNavbar nombre={nombre} idRol={idRol} onCerrarSesion={cerrarSesion} />
-
-            <div style={{ padding: '40px' }}>
-                <h1>¡Hola, {nombre}! 👋</h1>
-                <p style={{ color: '#64748b', marginBottom: '24px' }}>
-                    Tienes acceso como conductor y pasajero. Elige tu modo:
+        <div style={{
+            minHeight: '100vh', background: '#0d0f1a',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            fontFamily: 'var(--font-nunito)'
+        }}>
+            <div style={{ marginBottom: '40px', textAlign: 'center' }}>
+                <img src="/img/FastDrive.png" alt="FastDrive" style={{ height: '48px', marginBottom: '12px' }} />
+                <p style={{ color: '#94a3b8', margin: 0, fontSize: '0.95rem' }}>
+                    ¡Bienvenido, <strong style={{ color: 'white' }}>{nombre}</strong>!
                 </p>
+            </div>
 
-                {/* Selector de vista */}
-                <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
-                    <button onClick={() => setVista('conductor')} style={{
-                        padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-                        background: vista === 'conductor' ? '#3b82f6' : '#e2e8f0',
-                        color: vista === 'conductor' ? 'white' : '#64748b', fontWeight: 600
-                    }}>
-                        🚗 Modo Conductor
-                    </button>
-                    <button onClick={() => setVista('pasajero')} style={{
-                        padding: '10px 20px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-                        background: vista === 'pasajero' ? '#22c55e' : '#e2e8f0',
-                        color: vista === 'pasajero' ? 'white' : '#64748b', fontWeight: 600
-                    }}>
-                        🎓 Modo Pasajero
-                    </button>
+            <h2 style={{ color: 'white', margin: '0 0 8px', fontSize: '1.4rem', textAlign: 'center' }}>
+                ¿Cómo quieres usar FastDrive hoy?
+            </h2>
+            <p style={{ color: '#64748b', margin: '0 0 40px', fontSize: '0.9rem', textAlign: 'center' }}>
+                Selecciona tu modo para esta sesión
+            </p>
+
+            <div style={{ display: 'flex', gap: '24px' }}>
+                <div onClick={() => elegirModo('conductor')}
+                    style={{
+                        width: '260px', padding: '32px 24px', borderRadius: '20px',
+                        background: 'linear-gradient(135deg, #1e1b4b, #312e81)',
+                        border: '1px solid #4f46e5', cursor: 'pointer',
+                        transition: 'all 0.2s', textAlign: 'center',
+                        boxShadow: '0 4px 24px rgba(79,70,229,0.3)'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-6px)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                    <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>🚗</div>
+                    <h3 style={{ color: 'white', margin: '0 0 8px', fontSize: '1.2rem' }}>Modo Conductor</h3>
+                    <p style={{ color: '#a5b4fc', margin: '0 0 20px', fontSize: '0.85rem', lineHeight: '1.5' }}>
+                        Publica rutas, gestiona paradas y lleva estudiantes a su destino
+                    </p>
+                    <div style={{ background: '#4f46e5', color: 'white', padding: '10px 20px', borderRadius: '99px', fontSize: '0.85rem', fontWeight: 700, display: 'inline-block' }}>
+                        Entrar como Conductor →
+                    </div>
                 </div>
 
-                {vista === 'conductor' && (
-                    <section style={{ background: '#f0f9ff', padding: '20px', borderRadius: '12px', border: '1px solid #bae6fd' }}>
-                        <h2 style={{ color: '#0369a1' }}>Panel de Conductor</h2>
-                        <p>Gestiona tus rutas y viajes.</p>
-                        <button onClick={() => router.push('/app-conductor')}
-                            style={{ padding: '12px 24px', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-                            🚗 Mis Rutas
-                        </button>
-                    </section>
-                )}
-
-                {vista === 'pasajero' && (
-                    <section style={{ background: '#f0fdf4', padding: '20px', borderRadius: '12px', border: '1px solid #86efac' }}>
-                        <h2 style={{ color: '#166534' }}>Panel de Pasajero</h2>
-                        <p>Busca conductores disponibles para tu ruta.</p>
-                        <button onClick={() => router.push('/app-pasajero')}
-                            style={{ padding: '12px 24px', backgroundColor: '#22c55e', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
-                            🔍 Buscar Viajes
-                        </button>
-                    </section>
-                )}
+                <div onClick={() => elegirModo('pasajero')}
+                    style={{
+                        width: '260px', padding: '32px 24px', borderRadius: '20px',
+                        background: 'linear-gradient(135deg, #052e16, #14532d)',
+                        border: '1px solid #22c55e', cursor: 'pointer',
+                        transition: 'all 0.2s', textAlign: 'center',
+                        boxShadow: '0 4px 24px rgba(34,197,94,0.3)'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-6px)'}
+                    onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                    <div style={{ fontSize: '3.5rem', marginBottom: '16px' }}>🎓</div>
+                    <h3 style={{ color: 'white', margin: '0 0 8px', fontSize: '1.2rem' }}>Modo Pasajero</h3>
+                    <p style={{ color: '#86efac', margin: '0 0 20px', fontSize: '0.85rem', lineHeight: '1.5' }}>
+                        Busca viajes disponibles, reserva cupos y llega a tiempo a clase
+                    </p>
+                    <div style={{ background: '#22c55e', color: 'white', padding: '10px 20px', borderRadius: '99px', fontSize: '0.85rem', fontWeight: 700, display: 'inline-block' }}>
+                        Entrar como Pasajero →
+                    </div>
+                </div>
             </div>
+
+            <button onClick={cerrarSesion}
+                style={{ marginTop: '40px', background: 'none', border: '1px solid #334155', color: '#64748b', padding: '8px 20px', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
+                Cerrar sesión
+            </button>
         </div>
     );
 }

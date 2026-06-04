@@ -39,6 +39,17 @@ export default class MenuSeeder implements Seeder {
             { codigo_menu: 'M037', url_menu: '/dashboard/admin/permisos',        nombre_menu: 'Permisos Menú',    padre: 'M001' },
             //{ codigo_menu: 'M038', url_menu: '/dashboard/admin/solicitudes',     nombre_menu: 'Solicitudes',      padre: 'M001' },
             { codigo_menu: 'M038', url_menu: '/dashboard/admin/administradores', nombre_menu: 'Administradores',  padre: 'M001' },
+
+            { codigo_menu: 'M041', url_menu: '/rutasconductor',                nombre_menu: 'Mis Rutas',                padre: 'M011' },
+            { codigo_menu: 'M042', url_menu: '/rutasconductor/viaje',          nombre_menu: 'Viaje Activo',             padre: 'M011' },
+            { codigo_menu: 'M043', url_menu: '/rutasconductor/paradas',        nombre_menu: 'Paradas',                  padre: 'M011' },
+            { codigo_menu: 'M044', url_menu: '/rutasconductor/vehiculo',       nombre_menu: 'Mi Vehículo',              padre: 'M011' },
+            { codigo_menu: 'M046', url_menu: '/rutasconductor/calificaciones', nombre_menu: 'Calificaciones Conductor', padre: 'M011' },
+
+            // Hijo del dashboard pasajero
+            { codigo_menu: 'M051', url_menu: '/rutaspasajero',                    nombre_menu: 'Buscar Viajes',          padre: 'M012' },
+            { codigo_menu: 'M052', url_menu: '/rutaspasajero/calificaciones',     nombre_menu: 'Calificaciones Pasajero', padre: 'M012' },
+
         ];
 
         console.log("🌱 Insertando menús hijo...");

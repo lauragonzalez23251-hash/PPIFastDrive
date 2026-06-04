@@ -2,11 +2,12 @@
 import { useState, useEffect } from "react";
 import AdminSidebar from '@/components/AdminSidebar';
 import useAdminAuth from '@/lib/useAdminAuth';
+import SinPermiso from '@/components/SinPermiso';
 
 
 
 export default function EstadosAdminPage() {
-  const{nombre, listo} = useAdminAuth();
+  const { nombre, listo, acceso, puedeCrear, puedeActualizar, puedeEliminar } = useAdminAuth();
   const [estados, setEstados] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [modalAbierto, setModalAbierto] = useState(false);
@@ -79,6 +80,14 @@ export default function EstadosAdminPage() {
     }
   };
   if(!listo) return null; // O un spinner de carga
+  if (!acceso) return (
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <AdminSidebar />
+        <main style={{ marginLeft: '240px', flex: 1, background: '#f8fafc' }}>
+            <SinPermiso />
+        </main>
+    </div>
+);
 
   return (
   <div suppressHydrationWarning style={{ display: 'flex', minHeight: '100vh', fontFamily: 'sans-serif' }}>
@@ -94,9 +103,11 @@ export default function EstadosAdminPage() {
                 <h2 style={{ color: "#2c3e50", margin: 0 }}>Gestión de Estados</h2>
                 <p style={{ color: "#7f8c8d", margin: "5px 0 0 0" }}>Controla los estados lógicos de la plataforma FastDrive</p>
               </div>
+            {puedeCrear && (
               <button onClick={() => abrirModal()} style={{ backgroundColor: "#2ecc71", color: "white", border: "none", padding: "10px 15px", borderRadius: "5px", cursor: "pointer", fontWeight: "bold" }}>
                 + Nuevo Estado
               </button>
+              )}
             </div>
 
             {cargando ? <p>Cargando estados...</p> : (
@@ -120,8 +131,12 @@ export default function EstadosAdminPage() {
                   </td>
                   <td style={{ padding: "12px", color: "#2980b9", fontWeight: "500" }}>{est.categoria}</td>
                   <td style={{ padding: "12px", textAlign: "center" }}>
+                    {puedeActualizar && (
                       <button onClick={() => abrirModal(est)} style={{ backgroundColor: "#3498db", color: "white", border: "none", padding: "5px 10px", borderRadius: "3px", marginRight: "8px", cursor: "pointer" }}>Editar</button>
+                    )}
+                    {puedeEliminar && (
                       <button onClick={() => manejarEliminar(est.id_estado)} style={{ backgroundColor: "#e74c3c", color: "white", border: "none", padding: "5px 10px", borderRadius: "3px", cursor: "pointer" }}>Eliminar</button>
+                    )}
                   </td>
               </tr>
           ))}

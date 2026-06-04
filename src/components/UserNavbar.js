@@ -56,6 +56,19 @@ const menuMixto = [
                 <span style={{ color: '#e2e8f0', fontSize: '0.85rem' }}>
                     👋 {nombre}
                 </span>
+               {idRol === 4 && (
+                    <button onClick={() => {
+                        localStorage.removeItem('modoMixto'); // ← cambia sessionStorage por localStorage
+                        window.location.href = '/dashboard/mixto';
+                    }}
+                        style={{
+                            background: '#fef3c7', color: '#92400e', border: 'none',
+                            padding: '6px 12px', borderRadius: '8px', cursor: 'pointer',
+                            fontSize: '0.8rem', fontWeight: 600
+                        }}>
+                        🔄 Cambiar modo
+                    </button>
+                )}
                 <button onClick={onCerrarSesion} style={{
                     background: 'transparent', border: '1px solid #f87171',
                     color: '#f87171', padding: '6px 14px', borderRadius: '8px',

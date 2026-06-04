@@ -2,27 +2,26 @@
 import { useEffect, useRef, useState } from 'react';
 
 export default function MapaPicker({ onOrigenChange, onDestinoChange, universidades = [] }) {
-    const mapRef = useRef(null);
-    const mapInstanceRef = useRef(null);
-    const origenMarkerRef = useRef(null);
-    const destinoMarkerRef = useRef(null);
-    const polylineRef = useRef(null);
-    const searchOrigenRef = useRef(null);
-    const searchDestinoRef = useRef(null);
-    const modoRef = useRef('origen'); // ← ref en vez de state para el listener
+    const mapRef                = useRef(null);
+    const mapInstanceRef        = useRef(null);
+    const origenMarkerRef       = useRef(null);
+    const destinoMarkerRef      = useRef(null);
+    const directionsRendererRef = useRef(null); // ← reutilizable, evita memory leak
+    const searchOrigenRef       = useRef(null);
+    const searchDestinoRef      = useRef(null);
+    const modoRef               = useRef('origen');
 
-    const [modo, setModo] = useState('origen');
+    const [modo, setModo]           = useState('origen');
     const [origenDir, setOrigenDir] = useState('');
     const [destinoDir, setDestinoDir] = useState('');
-    const [tipoOrigen, setTipoOrigen] = useState(''); // 'barrio' | 'universidad'
-    const [tipoDestino, setTipoDestino] = useState(''); // 'barrio' | 'universidad'
+    const [tipoOrigen, setTipoOrigen]   = useState('');
+    const [tipoDestino, setTipoDestino] = useState('');
 
     useEffect(() => {
         if (!window.google) return;
         inicializarMapa();
     }, []);
 
-    // Inicializar autocomplete cuando cambia el tipo
     useEffect(() => {
         if (tipoOrigen === 'barrio' && searchOrigenRef.current && window.google) {
             inicializarAutocomplete(searchOrigenRef.current, 'origen');
@@ -45,15 +44,14 @@ export default function MapaPicker({ onOrigenChange, onDestinoChange, universida
         mapa.addListener('click', (e) => {
             const lat = e.latLng.lat();
             const lng = e.latLng.lng();
-            // Usa modoRef.current para siempre tener el valor actual
             procesarPunto(lat, lng, modoRef.current);
         });
     }
 
     function inicializarAutocomplete(inputEl, tipo) {
         const bounds = new window.google.maps.LatLngBounds(
-            { lat: 6.1000, lng: -75.7000 }, // SW Medellín
-            { lat: 6.4000, lng: -75.4000 }  // NE Medellín
+            { lat: 6.1000, lng: -75.7000 },
+            { lat: 6.4000, lng: -75.4000 }
         );
 
         const autocomplete = new window.google.maps.places.Autocomplete(inputEl, {
@@ -66,11 +64,9 @@ export default function MapaPicker({ onOrigenChange, onDestinoChange, universida
         autocomplete.addListener('place_changed', () => {
             const place = autocomplete.getPlace();
             if (!place.geometry) return;
-
             const lat = place.geometry.location.lat();
             const lng = place.geometry.location.lng();
             const direccion = place.formatted_address || place.name;
-
             procesarPunto(lat, lng, tipo, direccion);
         });
     }
@@ -88,36 +84,24 @@ export default function MapaPicker({ onOrigenChange, onDestinoChange, universida
         }
     }
 
+    // ── Una sola definición de finalizarPunto ────────────────────
     function finalizarPunto(lat, lng, tipo, direccion, nitUni = null) {
-    colocarMarcador(lat, lng, tipo);
-    if (tipo === 'origen') {
-        setOrigenDir(direccion);
-        onOrigenChange({ lat, lng, direccion, nitUni });
-    } else {
-        setDestinoDir(direccion);
-        onDestinoChange({ lat, lng, direccion, nitUni });
+        colocarMarcador(lat, lng, tipo);
+        if (tipo === 'origen') {
+            setOrigenDir(direccion);
+            onOrigenChange({ lat, lng, direccion, nitUni });
+        } else {
+            setDestinoDir(direccion);
+            onDestinoChange({ lat, lng, direccion, nitUni });
+        }
+        mapInstanceRef.current.panTo({ lat, lng });
     }
-    mapInstanceRef.current.panTo({ lat, lng });
-}
 
     function seleccionarUniversidad(uni, tipo) {
         const lat = Number(uni.direccion_latitud_uni);
-    const lng = Number(uni.direccion_longitud_uni);
-    finalizarPunto(lat, lng, tipo, uni.nombre_uni, uni.nit_uni);
-}
-
-        // En finalizarPunto agrega nitUni
-        function finalizarPunto(lat, lng, tipo, direccion, nitUni = null) {
-            colocarMarcador(lat, lng, tipo);
-            if (tipo === 'origen') {
-                setOrigenDir(direccion);
-                onOrigenChange({ lat, lng, direccion, nitUni });
-            } else {
-                setDestinoDir(direccion);
-                onDestinoChange({ lat, lng, direccion, nitUni });
-            }
-            mapInstanceRef.current.panTo({ lat, lng });
-        }
+        const lng = Number(uni.direccion_longitud_uni);
+        finalizarPunto(lat, lng, tipo, uni.nombre_uni, uni.nit_uni);
+    }
 
     function colocarMarcador(lat, lng, tipo) {
         const mapa = mapInstanceRef.current;
@@ -150,37 +134,35 @@ export default function MapaPicker({ onOrigenChange, onDestinoChange, universida
         }
     }
 
+    // ── DirectionsRenderer reutilizable ─────────────────────────
     function dibujarLinea() {
-        if (polylineRef.current) {
-            polylineRef.current.setMap(null);
-            polylineRef.current = null;
+        if (!directionsRendererRef.current) {
+            directionsRendererRef.current = new window.google.maps.DirectionsRenderer({
+                map: mapInstanceRef.current,
+                suppressMarkers: true,
+                polylineOptions: {
+                    strokeColor: '#4f46e5',
+                    strokeWeight: 4,
+                    strokeOpacity: 0.8,
+                }
+            });
         }
 
         const directionsService = new window.google.maps.DirectionsService();
-        const directionsRenderer = new window.google.maps.DirectionsRenderer({
-            map: mapInstanceRef.current,
-            suppressMarkers: true, // ← mantiene tus marcadores A y B
-            polylineOptions: {
-                strokeColor: '#4f46e5',
-                strokeWeight: 4,
-                strokeOpacity: 0.8,
-            }
-        });
-
         directionsService.route({
-            origin: origenMarkerRef.current.getPosition(),
+            origin:      origenMarkerRef.current.getPosition(),
             destination: destinoMarkerRef.current.getPosition(),
-            travelMode: window.google.maps.TravelMode.DRIVING,
+            travelMode:  window.google.maps.TravelMode.DRIVING,
         }, (result, status) => {
             if (status === 'OK') {
-                directionsRenderer.setDirections(result);
-                polylineRef.current = directionsRenderer;
+                directionsRendererRef.current.setDirections(result);
             }
         });
     }
+
     function cambiarModo(nuevoModo) {
         setModo(nuevoModo);
-        modoRef.current = nuevoModo; 
+        modoRef.current = nuevoModo;
     }
 
     return (
@@ -265,7 +247,7 @@ export default function MapaPicker({ onOrigenChange, onDestinoChange, universida
 
                 {destinoDir && (
                     <div style={{ background: '#f0fdf4', padding: '6px 10px', borderRadius: '6px', marginTop: '6px', fontSize: '0.78rem', color: '#16a34a' }}>
-                        ✅ {destinoDir}
+                        {destinoDir}
                     </div>
                 )}
             </div>

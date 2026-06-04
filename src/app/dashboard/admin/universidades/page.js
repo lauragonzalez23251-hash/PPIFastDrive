@@ -2,9 +2,10 @@
 import { useState, useEffect } from "react";
 import AdminSidebar from '@/components/AdminSidebar';
 import useAdminAuth from '@/lib/useAdminAuth';
+import SinPermiso from '@/components/SinPermiso';
 
 export default function UniversidadesAdminPage() {
-    const { nombre, listo } = useAdminAuth();
+    const { nombre, listo, acceso, puedeCrear, puedeActualizar, puedeEliminar } = useAdminAuth();
     const [unis, setUnis] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [modalAbierto, setModalAbierto] = useState(false);
@@ -75,6 +76,14 @@ export default function UniversidadesAdminPage() {
     }
 
     if (!listo) return null;
+    if (!acceso) return (
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+        <AdminSidebar />
+        <main style={{ marginLeft: '240px', flex: 1, background: '#f8fafc' }}>
+            <SinPermiso />
+        </main>
+    </div>
+);
 
     return (
         <div suppressHydrationWarning style={{ display: 'flex', minHeight: '100vh', fontFamily: 'sans-serif' }}>
@@ -87,9 +96,11 @@ export default function UniversidadesAdminPage() {
                         <h2 style={{ color: "#1e293b", margin: 0 }}>Universidades</h2>
                         <p style={{ color: "#64748b", margin: "5px 0 0 0" }}>Instituciones autorizadas para el carpooling</p>
                     </div>
-                    <button onClick={() => abrirModal()} style={{ background: '#4f46e5', color: "white", border: "none", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontWeight: "bold" }}>
-                        + Nueva Universidad
-                    </button>
+                    {puedeCrear && (
+                        <button onClick={() => abrirModal()} style={{ background: '#4f46e5', color: "white", border: "none", padding: "10px 20px", borderRadius: "8px", cursor: "pointer", fontWeight: "bold" }}>
+                            + Nueva Universidad
+                        </button>
+                    )}
                 </div>
 
                 {cargando ? <p>Cargando...</p> : (
@@ -114,8 +125,12 @@ export default function UniversidadesAdminPage() {
                                         <td style={{ padding: "12px 16px", color: '#64748b', fontSize: '0.8rem' }}>{uni.direccion_latitud_uni}</td>
                                         <td style={{ padding: "12px 16px", color: '#64748b', fontSize: '0.8rem' }}>{uni.direccion_longitud_uni}</td>
                                         <td style={{ padding: "12px 16px", textAlign: "center" }}>
-                                            <button onClick={() => abrirModal(uni)} style={{ background: '#e0e7ff', border: 'none', color: '#4f46e5', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', marginRight: '8px' }}>✏️ Editar</button>
-                                            <button onClick={() => manejarEliminar(uni.nit_uni)} style={{ background: '#fee2e2', border: 'none', color: '#ef4444', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>🗑️ Eliminar</button>
+                                            {puedeActualizar && (
+                                                <button onClick={() => abrirModal(uni)} style={{ background: '#e0e7ff', border: 'none', color: '#4f46e5', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', marginRight: '8px' }}>✏️ Editar</button>
+                                            )}
+                                            {puedeEliminar && (
+                                                <button onClick={() => manejarEliminar(uni.nit_uni)} style={{ background: '#fee2e2', border: 'none', color: '#ef4444', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }}>🗑️ Eliminar</button>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
