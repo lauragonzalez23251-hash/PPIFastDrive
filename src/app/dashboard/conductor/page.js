@@ -37,14 +37,13 @@ export default function DashboardConductor() {
     }
 
     async function cargarUltimoViaje() {
-    try {
-        const userId = localStorage.getItem('userId');
-        const res = await fetch(`/api/conductor/viaje?userId=${userId}&estado=Finalizado`);
-        const data = await res.json();
-        setUltimoViajeFinalizado(data);
-    } catch { console.error('Error cargando último viaje'); }
-}
-
+        try {
+            const userId = localStorage.getItem('userId');
+            const res = await fetch(`/api/conductor/viaje?userId=${userId}&estado=Finalizado`);
+            const data = await res.json();
+            setUltimoViajeFinalizado(data);
+        } catch { console.error('Error cargando último viaje'); }
+    }
 
     async function cargarPerfil() {
         try {
@@ -100,9 +99,9 @@ export default function DashboardConductor() {
                 setMsg('✅ Perfil actualizado');
                 localStorage.setItem('userName', form.nombre_user);
             } else {
-                setMsg(` ${data.error}`);
+                setMsg(`${data.error}`);
             }
-        } catch { setMsg(' Error de conexión'); }
+        } catch { setMsg('Error de conexión'); }
         finally { setLoading(false); }
     }
 
@@ -114,169 +113,447 @@ export default function DashboardConductor() {
     if (!listo) return null;
 
     const tarjetas = [
-        { id: 'rutas',          titulo: 'Mis Rutas',      descripcion: 'Crea y gestiona tus rutas semanales',           icono: '🗺️', color: '#4f46e5', ruta: '/rutasconductor' },
-        { id: 'viaje',          titulo: 'Viaje Activo',   descripcion: 'Ver y gestionar tu viaje en curso',             icono: '🚗', color: '#22c55e', ruta: '/rutasconductor/viaje' },
-        { id: 'vehiculo',       titulo: 'Mi Vehículo',    descripcion: 'Ver información de tu vehículo registrado',     icono: '🚙', color: '#ef4444', ruta: '/rutasconductor/vehiculo' },
-        { id: 'calificaciones', titulo: 'Calificaciones', descripcion: ultimoViajeFinalizado 
-            ? 'Tienes un viaje pendiente de calificar' 
-            : 'No tienes viajes pendientes de calificar', 
-        icono: '⭐', 
-        color: '#f59e0b', 
-        ruta: ultimoViajeFinalizado 
-            ? `/rutasconductor/calificaciones?viajeId=${ultimoViajeFinalizado.id_vj}` 
-            : '#' 
-    },
+        {
+            id: 'rutas',
+            titulo: 'Mis Rutas',
+            descripcion: 'Crea y gestiona tus rutas semanales',
+            icono: '🗺️',
+            ruta: '/rutasconductor'
+        },
+        {
+            id: 'viaje',
+            titulo: 'Viaje Activo',
+            descripcion: 'Ver y gestionar tu viaje en curso',
+            icono: '🚗',
+            ruta: '/rutasconductor/viaje'
+        },
+        {
+            id: 'vehiculo',
+            titulo: 'Mi Vehículo',
+            descripcion: 'Ver información de tu vehículo registrado',
+            icono: '🚙',
+            ruta: '/rutasconductor/vehiculo'
+        },
+        {
+            id: 'calificaciones',
+            titulo: 'Calificaciones',
+            descripcion: ultimoViajeFinalizado
+                ? 'Tienes un viaje pendiente de calificar'
+                : 'Sin viajes pendientes de calificar',
+            icono: '⭐⭐⭐⭐⭐',
+            ruta: ultimoViajeFinalizado
+                ? `/rutasconductor/calificaciones?viajeId=${ultimoViajeFinalizado.id_vj}`
+                : '#'
+        },
     ];
 
     return (
-        <div style={{ minHeight: '100vh', background: '#f8fafc' }}>
+        <div style={{ minHeight: '100vh', background: '#f0f2f8', fontFamily: "'Nunito', sans-serif" }}>
             <UserNavbar nombre={nombre} idRol={idRol} onCerrarSesion={cerrarSesion} />
 
-            <div style={{ padding: '32px', maxWidth: '900px', margin: '0 auto' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <div style={{ maxWidth: '960px', margin: '0 auto', padding: '36px 24px' }}>
+
+                {/* ── Header con saludo + botón de perfil grande ── */}
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '32px',
+                    flexWrap: 'wrap',
+                    gap: '16px'
+                }}>
                     <div>
-                        <h1 style={{ fontSize: '1.6rem', margin: '0 0 4px', color: '#1e293b' }}>¡Hola, {nombre}! 👋</h1>
-                        <p style={{ color: '#64748b', margin: 0 }}>¿Qué quieres hacer hoy?</p>
+                        <p style={{ color: '#5a5e7a', fontWeight: 700, fontSize: '0.9rem', marginBottom: '4px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                            Bienvenido de vuelta
+                        </p>
+                        <h1 style={{ fontSize: '2rem', fontWeight: 900, color: '#0d0f1a', margin: 0 }}>
+                            ¡Hola, {nombre}! 👋
+                        </h1>
                     </div>
-                    <button onClick={() => setPerfilAbierto(true)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'white', border: '1px solid #e2e8f0', padding: '8px 16px', borderRadius: '99px', cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '50%', overflow: 'hidden', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+
+                    {/* Botón de perfil grande */}
+                    <button
+                        onClick={() => setPerfilAbierto(true)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '14px',
+                            background: 'white',
+                            border: '2px solid #e2e4f0',
+                            borderRadius: '16px',
+                            padding: '12px 20px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 16px rgba(59,63,232,0.08)',
+                            transition: 'all 0.2s',
+                            minWidth: '220px'
+                        }}
+                        onMouseEnter={e => {
+                            e.currentTarget.style.borderColor = '#3b3fe8';
+                            e.currentTarget.style.boxShadow = '0 8px 24px rgba(59,63,232,0.15)';
+                        }}
+                        onMouseLeave={e => {
+                            e.currentTarget.style.borderColor = '#e2e4f0';
+                            e.currentTarget.style.boxShadow = '0 4px 16px rgba(59,63,232,0.08)';
+                        }}
+                    >
+                        {/* Foto de perfil grande */}
+                        <div style={{
+                            width: '56px',
+                            height: '56px',
+                            borderRadius: '50%',
+                            overflow: 'hidden',
+                            background: 'linear-gradient(135deg, #3b3fe8, #5a5ef5)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                            border: '3px solid #e2e4f0'
+                        }}>
                             {fotoPreview
                                 ? <img src={fotoPreview} alt="foto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                : <span>👤</span>
+                                : <span style={{ fontSize: '1.6rem' }}>👤</span>
                             }
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1e293b' }}>{nombre}</span>
-                            {calificacion?.promedio && (
-                                <Estrellas promedio={calificacion.promedio} total={calificacion.total} size="0.7rem" />
-                            )}
+
+                        {/* Nombre + estrellas */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '3px' }}>
+                            <span style={{ fontSize: '1rem', fontWeight: 800, color: '#0d0f1a' }}>
+                                {perfil ? `${perfil.nombre_user} ${perfil.primer_apellido}` : nombre}
+                            </span>
+                            {calificacion?.promedio
+                                ? <Estrellas promedio={calificacion.promedio} total={calificacion.total} size="0.8rem" />
+                                : <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>Sin calificaciones aún</span>
+                            }
+                            <span style={{
+                                fontSize: '0.7rem',
+                                background: 'rgba(59,63,232,0.1)',
+                                color: '#3b3fe8',
+                                padding: '2px 8px',
+                                borderRadius: '99px',
+                                fontWeight: 700
+                            }}>
+                                Ver perfil →
+                            </span>
                         </div>
                     </button>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                    {tarjetas.map(t => (
-                        <div key={t.id}
+                {/* ── Grid de tarjetas ── */}
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(2, 1fr)',
+                    gap: '20px'
+                }}>
+                    {tarjetas.map((t, i) => (
+                        <div
+                            key={t.id}
                             onClick={() => t.ruta !== '#' && router.push(t.ruta)}
                             style={{
-                                background: 'white', borderRadius: '16px', padding: '24px',
-                                border: '1px solid #e2e8f0', cursor: t.ruta !== '#' ? 'pointer' : 'default',
-                                transition: 'all 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-                                opacity: t.ruta === '#' ? 0.6 : 1
+                                background: t.ruta !== '#'
+                                    ? 'linear-gradient(135deg, #3b3fe8 0%, #5a5ef5 100%)'
+                                    : 'linear-gradient(135deg, #6b7280 0%, #9ca3af 100%)',
+                                borderRadius: '20px',
+                                padding: '32px 28px',
+                                cursor: t.ruta !== '#' ? 'pointer' : 'default',
+                                color: '#fff',
+                                transition: 'transform 0.2s, box-shadow 0.2s',
+                                boxShadow: t.ruta !== '#'
+                                    ? '0 8px 32px rgba(59,63,232,0.25)'
+                                    : '0 4px 16px rgba(0,0,0,0.1)',
+                                position: 'relative',
+                                overflow: 'hidden',
+                                opacity: t.ruta === '#' ? 0.7 : 1,
+                                animationDelay: `${i * 0.08}s`
                             }}
-                            onMouseEnter={e => { if (t.ruta !== '#') e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.1)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'; }}
+                            onMouseEnter={e => {
+                                if (t.ruta !== '#') {
+                                    e.currentTarget.style.transform = 'translateY(-4px)';
+                                    e.currentTarget.style.boxShadow = '0 16px 48px rgba(59,63,232,0.35)';
+                                }
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = t.ruta !== '#'
+                                    ? '0 8px 32px rgba(59,63,232,0.25)'
+                                    : '0 4px 16px rgba(0,0,0,0.1)';
+                            }}
                         >
-                            <div style={{ fontSize: '2rem', marginBottom: '10px' }}>{t.icono}</div>
-                            <h2 style={{ margin: '0 0 6px', fontSize: '1rem', color: '#1e293b' }}>{t.titulo}</h2>
-                            <p style={{ margin: 0, color: '#64748b', fontSize: '0.8rem' }}>{t.descripcion}</p>
-                            {t.ruta !== '#' && (
-                                <div style={{ marginTop: '12px', color: t.color, fontWeight: 600, fontSize: '0.8rem' }}>Ir →</div>
-                            )}
-                            {t.ruta === '#' && (
-                                <div style={{ marginTop: '12px', color: '#94a3b8', fontSize: '0.75rem' }}>Próximamente</div>
+                            {/* Círculo decorativo de fondo */}
+                            <div style={{
+                                position: 'absolute',
+                                top: '-30px',
+                                right: '-30px',
+                                width: '120px',
+                                height: '120px',
+                                borderRadius: '50%',
+                                background: 'rgba(255,255,255,0.08)',
+                                pointerEvents: 'none'
+                            }} />
+
+                            <div style={{ fontSize: '2.4rem', marginBottom: '14px' }}>{t.icono}</div>
+                            <h2 style={{
+                                margin: '0 0 8px',
+                                fontSize: '1.25rem',
+                                fontWeight: 900,
+                                color: '#fff',
+                                letterSpacing: '0.5px'
+                            }}>
+                                {t.titulo}
+                            </h2>
+                            <p style={{
+                                margin: '0 0 20px',
+                                color: 'rgba(255,255,255,0.8)',
+                                fontSize: '0.88rem',
+                                lineHeight: 1.5,
+                                fontWeight: 600
+                            }}>
+                                {t.descripcion}
+                            </p>
+
+                            {t.ruta !== '#' ? (
+                                <div style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    background: 'rgba(255,255,255,0.2)',
+                                    border: '1.5px solid rgba(255,255,255,0.4)',
+                                    color: '#fff',
+                                    fontWeight: 800,
+                                    fontSize: '0.82rem',
+                                    padding: '8px 18px',
+                                    borderRadius: '99px',
+                                    letterSpacing: '0.5px'
+                                }}>
+                                    Ir ahora →
+                                </div>
+                            ) : (
+                                <div style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    background: 'rgba(255,255,255,0.1)',
+                                    border: '1.5px solid rgba(255,255,255,0.2)',
+                                    color: 'rgba(255,255,255,0.6)',
+                                    fontWeight: 700,
+                                    fontSize: '0.82rem',
+                                    padding: '8px 18px',
+                                    borderRadius: '99px'
+                                }}>
+                                    Sin pendientes
+                                </div>
                             )}
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* Overlay */}
+            {/* ── Overlay del panel de perfil ── */}
             {perfilAbierto && (
-                <div onClick={() => setPerfilAbierto(false)}
-                    style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', background: 'rgba(0,0,0,0.4)', zIndex: 200 }} />
+                <div
+                    onClick={() => setPerfilAbierto(false)}
+                    style={{
+                        position: 'fixed', top: 0, left: 0,
+                        width: '100%', height: '100%',
+                        background: 'rgba(13,15,26,0.5)',
+                        backdropFilter: 'blur(4px)',
+                        zIndex: 200
+                    }}
+                />
             )}
 
-            {/* Panel deslizante */}
+            {/* ── Panel deslizante de perfil ── */}
             <div style={{
-                position: 'fixed', top: 0, right: perfilAbierto ? 0 : '-420px',
-                width: '400px', height: '100vh', background: 'white',
-                boxShadow: '-4px 0 20px rgba(0,0,0,0.1)', zIndex: 300,
-                transition: 'right 0.3s ease', overflowY: 'auto', padding: '24px'
+                position: 'fixed',
+                top: 0,
+                right: perfilAbierto ? 0 : '-440px',
+                width: '420px',
+                height: '100vh',
+                background: 'white',
+                boxShadow: '-8px 0 40px rgba(13,15,26,0.15)',
+                zIndex: 300,
+                transition: 'right 0.3s ease',
+                overflowY: 'auto',
+                padding: '28px'
             }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <h2 style={{ margin: 0, color: '#1e293b' }}>Mi Perfil</h2>
-                    <button onClick={() => setPerfilAbierto(false)}
-                        style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', fontSize: '1rem' }}>
+                {/* Header del panel */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                    <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 900, color: '#0d0f1a' }}>Mi Perfil</h2>
+                    <button
+                        onClick={() => setPerfilAbierto(false)}
+                        style={{
+                            background: '#f0f2f8',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '36px',
+                            height: '36px',
+                            cursor: 'pointer',
+                            fontSize: '1rem',
+                            color: '#5a5e7a',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}
+                    >
                         ✕
                     </button>
                 </div>
 
+                {/* Mensaje de estado */}
                 {msg && (
-                    <div style={{ padding: '8px 12px', borderRadius: '8px', marginBottom: '12px', fontSize: '0.8rem',
+                    <div style={{
+                        padding: '10px 14px',
+                        borderRadius: '10px',
+                        marginBottom: '16px',
+                        fontSize: '0.82rem',
+                        fontWeight: 700,
                         background: msg.includes('✅') ? '#dcfce7' : '#fee2e2',
-                        color: msg.includes('✅') ? '#16a34a' : '#dc2626' }}>
+                        color: msg.includes('✅') ? '#16a34a' : '#dc2626',
+                        border: `1px solid ${msg.includes('✅') ? '#86efac' : '#fca5a5'}`
+                    }}>
                         {msg}
                     </div>
                 )}
 
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '20px', paddingBottom: '16px', borderBottom: '1px solid #f1f5f9' }}>
-                    <div style={{ position: 'relative', marginBottom: '12px' }}>
-                        <div onClick={() => editando && fotoRef.current?.click()}
-                            style={{ width: '80px', height: '80px', borderRadius: '50%', overflow: 'hidden', border: '3px solid #e2e8f0', cursor: editando ? 'pointer' : 'default', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {/* Foto + nombre + estrellas */}
+                <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    marginBottom: '24px',
+                    paddingBottom: '20px',
+                    borderBottom: '1.5px solid #f0f2f8'
+                }}>
+                    <div style={{ position: 'relative', marginBottom: '14px' }}>
+                        <div
+                            onClick={() => editando && fotoRef.current?.click()}
+                            style={{
+                                width: '96px',
+                                height: '96px',
+                                borderRadius: '50%',
+                                overflow: 'hidden',
+                                border: '4px solid #3b3fe8',
+                                cursor: editando ? 'pointer' : 'default',
+                                background: 'linear-gradient(135deg, #3b3fe8, #5a5ef5)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
                             {fotoPreview
                                 ? <img src={fotoPreview} alt="foto" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                : <span style={{ fontSize: '2.5rem' }}>👤</span>
+                                : <span style={{ fontSize: '3rem' }}>👤</span>
                             }
                         </div>
                         {editando && (
-                            <button type="button" onClick={() => fotoRef.current?.click()}
-                                style={{ position: 'absolute', bottom: 0, right: 0, background: '#4f46e5', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', fontSize: '0.7rem' }}>
+                            <button
+                                type="button"
+                                onClick={() => fotoRef.current?.click()}
+                                style={{
+                                    position: 'absolute', bottom: 2, right: 2,
+                                    background: '#3b3fe8', color: 'white',
+                                    border: '2px solid white', borderRadius: '50%',
+                                    width: '28px', height: '28px',
+                                    cursor: 'pointer', fontSize: '0.75rem',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}
+                            >
                                 ✏️
                             </button>
                         )}
                         <input ref={fotoRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFotoChange} />
                     </div>
-                    <h3 style={{ margin: '0 0 4px', color: '#1e293b', textAlign: 'center' }}>
+
+                    <h3 style={{ margin: '0 0 6px', fontSize: '1.2rem', fontWeight: 900, color: '#0d0f1a', textAlign: 'center' }}>
                         {perfil ? `${perfil.nombre_user} ${perfil.primer_apellido}` : nombre}
                     </h3>
+
                     {calificacion && (
-                        <div style={{ marginTop: '4px' }}>
+                        <div style={{ marginBottom: '8px' }}>
                             <Estrellas promedio={calificacion.promedio} total={calificacion.total} />
                         </div>
                     )}
+
                     {perfil && (
-                        <span style={{ fontSize: '0.75rem', background: '#e0e7ff', color: '#4f46e5', padding: '2px 10px', borderRadius: '99px', fontWeight: 600, marginTop: '6px' }}>
+                        <span style={{
+                            fontSize: '0.75rem',
+                            background: 'rgba(59,63,232,0.1)',
+                            color: '#3b3fe8',
+                            padding: '4px 14px',
+                            borderRadius: '99px',
+                            fontWeight: 800,
+                            letterSpacing: '1px',
+                            textTransform: 'uppercase'
+                        }}>
                             {perfil.rol}
                         </span>
                     )}
                 </div>
 
+                {/* Datos fijos */}
                 {perfil && (
-                    <div style={{ marginBottom: '16px' }}>
+                    <div style={{ marginBottom: '20px' }}>
                         {[
-                            { label: '🪪 Documento',  value: perfil.documento_identidad },
-                            { label: '📧 Correo',     value: perfil.correo_personal_user },
-                            { label: '🎂 Nacimiento', value: formatFecha(perfil.fecha_nacimiento_user) },
+                            { label: '🪪 Documento',   value: perfil.documento_identidad },
+                            { label: '📧 Correo',      value: perfil.correo_personal_user },
+                            { label: '🎂 Nacimiento',  value: formatFecha(perfil.fecha_nacimiento_user) },
                         ].map(item => (
-                            <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f8fafc' }}>
-                                <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>{item.label}</span>
-                                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#64748b' }}>{item.value || '—'}</span>
+                            <div key={item.label} style={{
+                                display: 'flex', justifyContent: 'space-between',
+                                padding: '10px 0', borderBottom: '1px solid #f0f2f8'
+                            }}>
+                                <span style={{ fontSize: '0.8rem', color: '#9ca3af', fontWeight: 600 }}>{item.label}</span>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#5a5e7a' }}>{item.value || '—'}</span>
                             </div>
                         ))}
                     </div>
                 )}
 
+                {/* Datos editables o formulario */}
                 {!editando ? (
                     <>
                         {perfil && (
-                            <div style={{ marginBottom: '16px' }}>
+                            <div style={{ marginBottom: '20px' }}>
                                 {[
                                     { label: '👤 Nombre',           value: perfil.nombre_user },
                                     { label: '👤 Primer Apellido',  value: perfil.primer_apellido },
                                     { label: '👤 Segundo Apellido', value: perfil.segundo_apellido },
                                     { label: '📱 Celular',          value: perfil.celular },
                                 ].map(item => (
-                                    <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f8fafc' }}>
-                                        <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>{item.label}</span>
-                                        <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#1e293b' }}>{item.value || '—'}</span>
+                                    <div key={item.label} style={{
+                                        display: 'flex', justifyContent: 'space-between',
+                                        padding: '10px 0', borderBottom: '1px solid #f0f2f8'
+                                    }}>
+                                        <span style={{ fontSize: '0.8rem', color: '#9ca3af', fontWeight: 600 }}>{item.label}</span>
+                                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0d0f1a' }}>{item.value || '—'}</span>
                                     </div>
                                 ))}
                             </div>
                         )}
-                        <button onClick={() => setEditando(true)}
-                            style={{ width: '100%', padding: '10px', background: '#e0e7ff', color: '#4f46e5', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
+                        <button
+                            onClick={() => setEditando(true)}
+                            style={{
+                                width: '100%',
+                                padding: '14px',
+                                background: 'linear-gradient(135deg, #3b3fe8, #5a5ef5)',
+                                color: '#fff',
+                                border: 'none',
+                                borderRadius: '12px',
+                                cursor: 'pointer',
+                                fontWeight: 800,
+                                fontSize: '0.9rem',
+                                letterSpacing: '0.5px',
+                                boxShadow: '0 4px 16px rgba(59,63,232,0.3)',
+                                transition: 'transform 0.2s, box-shadow 0.2s'
+                            }}
+                            onMouseEnter={e => {
+                                e.currentTarget.style.transform = 'translateY(-2px)';
+                                e.currentTarget.style.boxShadow = '0 8px 24px rgba(59,63,232,0.4)';
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = '0 4px 16px rgba(59,63,232,0.3)';
+                            }}
+                        >
                             ✏️ Editar Perfil
                         </button>
                     </>
@@ -288,32 +565,85 @@ export default function DashboardConductor() {
                             { label: 'Segundo Apellido', key: 'segundo_apellido', placeholder: 'Segundo apellido' },
                             { label: 'Celular',          key: 'celular',          placeholder: 'Ej: 300 123 4567' },
                         ].map(field => (
-                            <div key={field.key} style={{ marginBottom: '10px' }}>
-                                <label style={{ display: 'block', marginBottom: '3px', fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>
+                            <div key={field.key} style={{ marginBottom: '12px' }}>
+                                <label style={{
+                                    display: 'block', marginBottom: '4px',
+                                    fontSize: '0.75rem', fontWeight: 700,
+                                    color: '#5a5e7a', textTransform: 'uppercase', letterSpacing: '0.5px'
+                                }}>
                                     {field.label}
                                 </label>
-                                <input type="text" value={form[field.key]}
+                                <input
+                                    type="text"
+                                    value={form[field.key]}
                                     onChange={e => setForm({ ...form, [field.key]: e.target.value })}
                                     placeholder={field.placeholder}
-                                    style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', boxSizing: 'border-box', fontSize: '0.85rem' }} />
+                                    style={{
+                                        width: '100%', padding: '10px 14px',
+                                        borderRadius: '10px',
+                                        border: '1.5px solid #e2e4f0',
+                                        fontFamily: "'Nunito', sans-serif",
+                                        fontSize: '0.9rem', fontWeight: 600,
+                                        outline: 'none', boxSizing: 'border-box',
+                                        transition: 'border-color 0.2s'
+                                    }}
+                                    onFocus={e => e.target.style.borderColor = '#3b3fe8'}
+                                    onBlur={e => e.target.style.borderColor = '#e2e4f0'}
+                                />
                             </div>
                         ))}
-                        <div style={{ marginBottom: '12px' }}>
-                            <label style={{ display: 'block', marginBottom: '3px', fontSize: '0.75rem', fontWeight: 600, color: '#64748b' }}>
+                        <div style={{ marginBottom: '16px' }}>
+                            <label style={{
+                                display: 'block', marginBottom: '4px',
+                                fontSize: '0.75rem', fontWeight: 700,
+                                color: '#5a5e7a', textTransform: 'uppercase', letterSpacing: '0.5px'
+                            }}>
                                 Nueva Contraseña
                             </label>
-                            <input type="password" value={form.nuevaContrasena}
+                            <input
+                                type="password"
+                                value={form.nuevaContrasena}
                                 onChange={e => setForm({ ...form, nuevaContrasena: e.target.value })}
                                 placeholder="Dejar vacío para no cambiar"
-                                style={{ width: '100%', padding: '8px', borderRadius: '8px', border: '1px solid #e2e8f0', boxSizing: 'border-box', fontSize: '0.85rem' }} />
+                                style={{
+                                    width: '100%', padding: '10px 14px',
+                                    borderRadius: '10px',
+                                    border: '1.5px solid #e2e4f0',
+                                    fontFamily: "'Nunito', sans-serif",
+                                    fontSize: '0.9rem', fontWeight: 600,
+                                    outline: 'none', boxSizing: 'border-box'
+                                }}
+                                onFocus={e => e.target.style.borderColor = '#3b3fe8'}
+                                onBlur={e => e.target.style.borderColor = '#e2e4f0'}
+                            />
                         </div>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            <button type="button" onClick={() => { setEditando(false); setMsg(''); setFotoPreview(perfil?.foto_perf); }}
-                                style={{ flex: 1, padding: '8px', background: '#e2e8f0', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                            <button
+                                type="button"
+                                onClick={() => { setEditando(false); setMsg(''); setFotoPreview(perfil?.foto_perf); }}
+                                style={{
+                                    flex: 1, padding: '12px',
+                                    background: '#f0f2f8', color: '#5a5e7a',
+                                    border: '1.5px solid #e2e4f0',
+                                    borderRadius: '10px', cursor: 'pointer',
+                                    fontWeight: 700, fontSize: '0.88rem'
+                                }}
+                            >
                                 Cancelar
                             </button>
-                            <button type="submit" disabled={loading}
-                                style={{ flex: 1, padding: '8px', background: '#4f46e5', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.85rem' }}>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                style={{
+                                    flex: 1, padding: '12px',
+                                    background: 'linear-gradient(135deg, #3b3fe8, #5a5ef5)',
+                                    color: 'white', border: 'none',
+                                    borderRadius: '10px', cursor: 'pointer',
+                                    fontWeight: 800, fontSize: '0.88rem',
+                                    boxShadow: '0 4px 14px rgba(59,63,232,0.3)',
+                                    opacity: loading ? 0.7 : 1
+                                }}
+                            >
                                 {loading ? 'Guardando...' : 'Guardar'}
                             </button>
                         </div>

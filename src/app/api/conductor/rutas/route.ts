@@ -21,11 +21,10 @@ export async function GET(request: Request) {
         return NextResponse.json(rutas, { status: 200 });
 
     } catch (error: any) {
-        console.error(" Error GET rutas:", error);
+        console.error("Error GET rutas:", error);
         return NextResponse.json({ error: "Error al obtener rutas" }, { status: 500 });
     }
 }
-
 export async function POST(request: Request) {
     try {
         const body = await request.json();
@@ -51,7 +50,7 @@ export async function POST(request: Request) {
         if (!universidad) return NextResponse.json({ error: "Universidad no encontrada" }, { status: 404 });
 
         const nuevaRuta = rutaRepo.create({
-            hora_salida_rc:           new Date(`1970-01-01T${body.horaSalida}:00.000Z`),
+            hora_salida_rc:           body.horaSalida, 
             tarifa_rc:                Number(body.tarifa),
             punto_origen_latitud_rc:  body.origenLat,
             punto_origen_longitud_rc: body.origenLng,
@@ -66,14 +65,11 @@ export async function POST(request: Request) {
         });
 
         const rutaGuardada = await rutaRepo.save(nuevaRuta);
-        await ds.query(
-                `UPDATE RUTA_CONDUCTOR SET HORA_SALIDA_RC = TO_DATE('1970-01-01 ' || :1, 'YYYY-MM-DD HH24:MI') WHERE ID_RC = :2`,
-                [body.horaSalida, rutaGuardada.id_rc]
-            );
         return NextResponse.json(rutaGuardada, { status: 201 });
 
-    } catch (error: any) {
-        console.error(" Error POST ruta:", error);
-        return NextResponse.json({ error: "Error al crear ruta" }, { status: 500 });
+        
+        } catch (error: any) {
+            console.error(" Error POST ruta:", error);
+            return NextResponse.json({ error: "Error al crear ruta" }, { status: 500 });
+        }
     }
-}

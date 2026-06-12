@@ -21,9 +21,8 @@ export default function usePermisos() {
                 setPermisos({});
                 setCargando(false);
             });
-    }, []);
+    }, []); // ← solo se ejecuta una vez al montar
 
-    // Mientras carga, devuelve todo bloqueado para evitar que se muestre contenido sin permisos
     if (cargando || permisos === null) {
         return {
             permisos: null,
@@ -35,10 +34,8 @@ export default function usePermisos() {
         };
     }
 
-    // Una vez cargado, verificar permisos reales
     const permisoPagina = permisos[pathname];
 
-    // Si no hay permiso configurado para esta página, permitir todo
     if (!permisoPagina) {
         return {
             permisos,

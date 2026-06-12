@@ -34,7 +34,8 @@ const options: DataSourceOptions & SeederOptions = {
     password: "123",
     sid: "xe",
     synchronize: false,
-    logging: false,
+    logging: true,
+    //logging: false,
 
      extra: {
         poolMin: 2,        // conexiones mínimas siempre abiertas

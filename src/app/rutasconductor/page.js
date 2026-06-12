@@ -11,23 +11,15 @@ import SinPermiso from '@/components/SinPermiso';
 
 function formatHora(h) {
     if (!h) return '';
-    try {
-        const d = new Date(h);
-        if (!isNaN(d.getTime())) {
-            const hours = d.getUTCHours();
-            const mins = String(d.getUTCMinutes()).padStart(2, '0');
-            return `${hours > 12 ? hours - 12 : hours || 12}:${mins} ${hours >= 12 ? 'PM' : 'AM'}`;
-        }
-        const [hh, mm] = h.toString().split(':');
-        const hour = parseInt(hh);
-        return `${hour > 12 ? hour - 12 : hour || 12}:${mm} ${hour >= 12 ? 'PM' : 'AM'}`;
-    } catch { return h; }
+    const [hh, mm] = h.toString().split(':');
+    const hour = parseInt(hh);
+    return `${hour > 12 ? hour - 12 : hour || 12}:${mm} ${hour >= 12 ? 'PM' : 'AM'}`;
 }
 
 export default function ConductoresPage() {
   const { nombre, idRol, listo, cerrarSesion } = useAuth([2, 4]);
   const { puedeLeer, puedeCrear, puedeEliminar, cargando } = usePermisos();
-  console.log('puedeLeer:', puedeLeer, 'puedeCrear:', puedeCrear, 'cargandoPermisos:', cargando); 
+  //console.log('puedeLeer:', puedeLeer, 'puedeCrear:', puedeCrear, 'cargandoPermisos:', cargando); 
   const router = useRouter();
 
   const [trips, setTrips] = useState([]);
@@ -305,13 +297,6 @@ export default function ConductoresPage() {
           </div>
 
         </div>
-             {puedeCrear && (
-                    <button onClick={publicarViaje}>✓ Publicar Viaje</button>
-                )}
-
-                {puedeEliminar && (
-                    <button onClick={() => eliminarViaje(t.id_rc)}>🗑️ Eliminar</button>
-                )}
       </main>
       <div className={`toast ${toastVisible ? 'show' : ''}`}>
         <span>{toast}</span>

@@ -11,8 +11,8 @@ export class RutaConductor {
     @PrimaryGeneratedColumn({ type: "number", name: "ID_RC" })
     id_rc!: number;
 
-    @Column({ type: "date", nullable: false, name: "HORA_SALIDA_RC" })
-    hora_salida_rc!: Date;
+   @Column({ type: "varchar2", length: 5, nullable: false, name: "HORA_SALIDA_RC" })
+    hora_salida_rc!: string;
 
     //@Column({ type: "date", nullable: true, name: "HORA_ESTIPULADA_LLEGADA_RC" })
     //hora_estipulada_llegada_rc!: Date;
