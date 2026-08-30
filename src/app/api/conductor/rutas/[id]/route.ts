@@ -73,17 +73,13 @@ export async function PATCH(
             const viajeGuardado = await viajeRepo.save(nuevoViaje);
 
             // Guardar hora_salida_vj con query nativa
-            const horaRuta = await ds.query(
-                `SELECT TO_CHAR(HORA_SALIDA_RC, 'HH24:MI') AS hora FROM RUTA_CONDUCTOR WHERE ID_RC = :1`,
-                [Number(id)]
-            );
-
-            if (horaRuta[0]?.HORA) {
-                await ds.query(
-                    `UPDATE VIAJE SET HORA_SALIDA_VJ = TO_DATE('1970-01-01 ' || :1, 'YYYY-MM-DD HH24:MI') WHERE ID_VJ = :2`,
-                    [horaRuta[0].HORA, viajeGuardado.id_vj]
-                );
-            }
+            // ✅ Pon esto
+                if (ruta.hora_salida_rc) {
+                    await ds.query(
+                        `UPDATE VIAJE SET HORA_SALIDA_VJ = TO_DATE('1970-01-01 ' || :1, 'YYYY-MM-DD HH24:MI') WHERE ID_VJ = :2`,
+                        [ruta.hora_salida_rc, viajeGuardado.id_vj]
+                    );
+                }
 
             return NextResponse.json({ message: "Ruta activada y viaje creado", viajeId: viajeGuardado.id_vj }, { status: 200 });
 
